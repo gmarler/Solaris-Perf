@@ -5,13 +5,6 @@ use base 'Catalyst::Model::DBIC::Schema';
 
 __PACKAGE__->config(
     schema_class => 'Solaris::Perf::Schema',
-    
-    connect_info => {
-        dsn => 'dbi:Pg:dbname=perfdb',
-        user => 'catalyst',
-        password => 'test',
-        AutoCommit => q{1},
-    }
 );
 
 =head1 NAME
