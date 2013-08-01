@@ -30,7 +30,9 @@ ok my $host = Host->find({name => 'fwsse37'}) =>
 
 my $nonhost = Host->find({ name => 'control'});
 
-is($nonhost,undef,"Cannot find Max's computer");
+is($nonhost,undef,"Cannot find Max's computer, as expected");
 
+#my $fhost = Host->first();
+#is($fhost,"control","Control should be first host");
 
 done_testing;
