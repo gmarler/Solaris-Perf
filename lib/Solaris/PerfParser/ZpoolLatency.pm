@@ -10,6 +10,7 @@ use IO::File                   qw();
 use DateTime::Format::Strptime qw();
 use DateTime::Set              qw();
 use DateTime::Span             qw();
+use Fcntl                      qw(SEEK_SET);
 use Data::Dumper;
 
 has 'datastream' => ( is       => 'rw',
@@ -89,7 +90,7 @@ sub scan {
       @subs = $c =~ m{ $regex }gsmx;
     }
     if (@subs) {
-      my ($data,$dt_stamp,$coredata,$esecs,$drops);
+      my ($data,$dt_stamp,$coredata,$drops);
       for (my $i = 0; $i < scalar(@subs); $i++) {
         $data = $subs[$i];
         # Break out timestamp, parse into DateTime object
@@ -111,4 +112,13 @@ sub scan {
   }
 }
 
+sub reset {
+  my ($self) = shift;
+
+  my ($fh) = $self->datastream;
+  $fh->seek(0, SEEK_SET);
+}
+
+sub _parse_record {
+}
 1;

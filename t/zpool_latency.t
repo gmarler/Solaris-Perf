@@ -25,9 +25,9 @@ isa_ok($p, $class, "Should be a $class");
 
 $p->scan();
 
-cmp_ok($p->record_count, '==', 112, 'record_count == 112 records');
-
-# TODO:
 # - There should be 112 "stanzas" in this data file, each prefixed by a
 #   timestamp
-#
+cmp_ok($p->record_count, '==', 112, 'record_count == 112 records');
+
+cmp_ok($p->reset(), '==', 1, 'reset should return success');
+
