@@ -4,6 +4,7 @@ use warnings;
 use Test::Most 'no_plan';
 use IO::File;
 use Path::Class::File ();
+use JSON              ();
 
 my $class = 'Solaris::PerfParser::ZpoolLatency';
 
@@ -32,4 +33,8 @@ $p->scan();
 cmp_ok($p->record_count, '==', 112, 'record_count == 112 records');
 
 #cmp_ok($p->reset(), '==', 1, 'reset should return success');
+$p->next();
 
+my $pretty_printed = JSON->new->allow_blessed->pretty->encode( $p->interval_data() );
+
+warn $pretty_printed;

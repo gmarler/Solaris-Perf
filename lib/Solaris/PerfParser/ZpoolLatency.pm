@@ -150,7 +150,7 @@ sub next {
   my ($buf, $c);
   my ($regex) = $self->regex;
   my ($regex_eof) = $self->regex_eof;
-  my (@data) = @{$self->data};
+  my (@data) = @{$self->interval_data};
 
   my $strp = DateTime::Format::Strptime->new(
     pattern   => '%Y %B %d %T',
@@ -197,19 +197,19 @@ sub next {
       $self->record_count($self->record_count + $drops);
     }
   }
-  $self->data(\@data);
+  $self->interval_data(\@data);
 
   ##### INITIAL BAD IDEA
-  my (@data) = @{$self->data};
-
-  foreach my $entry (@data) {
-    my ($datetime) = $entry->{datetime}->strftime("%x %X");
-    foreach my $bucket (sort { $a <=> $b } keys %{$entry->{'action'}->{'ALL'}})
-    {
-      my $count = $entry->{'action'}->{'ALL'}->{$bucket};
-      print "{ \"datetime\": \"$datetime\", \"bucket\": $bucket, \"count\": $count }\n";
-    }
-  }
+#  my (@data) = @{$self->data};
+#
+#  foreach my $entry (@data) {
+#    my ($datetime) = $entry->{datetime}->strftime("%x %X");
+#    foreach my $bucket (sort { $a <=> $b } keys %{$entry->{'action'}->{'ALL'}})
+#    {
+#      my $count = $entry->{'action'}->{'ALL'}->{$bucket};
+#      print "{ \"datetime\": \"$datetime\", \"bucket\": $bucket, \"count\": $count }\n";
+#    }
+#  }
   #####
 }
 
@@ -261,6 +261,7 @@ sub _parse_record {
     # And, aggregate *everything*
     $bucket_data{'action'}->{'ALL'}->{$bucket} += $count;
   }
+  return \%bucket_data;
 }
 
 1;
