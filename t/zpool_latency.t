@@ -23,11 +23,13 @@ my $p = Solaris::PerfParser::ZpoolLatency->new(datastream => $ds);
 
 isa_ok($p, $class, "Should be a $class");
 
+can_ok($p, qw(new scan record_count datastream) );
+
 $p->scan();
 
 # - There should be 112 "stanzas" in this data file, each prefixed by a
 #   timestamp
 cmp_ok($p->record_count, '==', 112, 'record_count == 112 records');
 
-cmp_ok($p->reset(), '==', 1, 'reset should return success');
+#cmp_ok($p->reset(), '==', 1, 'reset should return success');
 
