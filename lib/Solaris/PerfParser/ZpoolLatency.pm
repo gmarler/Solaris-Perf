@@ -151,6 +151,7 @@ sub next {
   my ($regex) = $self->regex;
   my ($regex_eof) = $self->regex_eof;
   my (@data) = @{$self->interval_data};
+  my ($READ_SZ) = $self->read_chunk;
 
   my $strp = DateTime::Format::Strptime->new(
     pattern   => '%Y %B %d %T',
@@ -159,10 +160,14 @@ sub next {
     on_error  => 'croak',
   );
 
+  if (scalar(@{$self->interval_data})) {
+    return shift @{$self->interval_data};
+  }
+
   $self->datastream->seek(SEEK_SET, 0);
 
   my $i = 0;
-  while ($self->datastream->read($buf,65536)) {
+  while ($self->datastream->read($buf,$READ_SZ)) {
     $c .= $buf;
     # Extract as many whole sections as possible, process, then
     # continue on
