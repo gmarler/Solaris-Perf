@@ -1,5 +1,7 @@
 use strict;
 use warnings;
+# Enable 'static' variables
+use feature    qw( state );
 
 package Solaris::PerfParser::ZpoolLatency;
 
@@ -23,6 +25,11 @@ has 'interval_data' => ( is      => 'rw',
                          isa     => 'ArrayRef[HashRef]',
                          default => sub { [] },
                        );
+
+# Number of records discovered in the scan
+has 'record_count' => ( is => 'rw', isa => 'Int', default => 0 );
+
+has 'read_chunk'   => ( is => 'ro', isa => 'Int', default => 65536 );
 
 my $dt_regex = qr{^
                    (?: \d{4} \s+     # year
@@ -76,10 +83,6 @@ has 'regex_eof' => ( is => 'rw', isa => 'RegexpRef',
                   );
 
 
-# Number of records discovered in the scan
-has 'record_count' => ( is => 'rw', isa => 'Int', default => 0 );
-
-has 'read_chunk'   => ( is => 'ro', isa => 'Int', default => 65536 );
 
 sub scan {
   my ($self) = shift;
@@ -133,8 +136,8 @@ sub scan {
 sub reset {
   my ($self) = shift;
 
-  my ($fh) = $self->datastream;
-  $fh->seek(0, SEEK_SET);
+  $self->record_count(0);
+  $self->datastream->seek(0, SEEK_SET);
 }
 
 =head2 next
@@ -147,10 +150,12 @@ print them in the desired format, JSON by default
 sub next {
   my ($self) = shift;
 
-  my ($buf, $c);
+  my ($buf);
+  # Use a static/stateful variable, as between calls it's likely that you'll
+  # have partially consumed/parsed data that you've read from the datastream
+  state $c = '';
   my ($regex) = $self->regex;
   my ($regex_eof) = $self->regex_eof;
-  my (@data) = @{$self->interval_data};
   my ($READ_SZ) = $self->read_chunk;
 
   my $strp = DateTime::Format::Strptime->new(
@@ -164,10 +169,8 @@ sub next {
     return shift @{$self->interval_data};
   }
 
-  $self->datastream->seek(SEEK_SET, 0);
-
-  my $i = 0;
-  while ($self->datastream->read($buf,$READ_SZ)) {
+  do {
+    $self->datastream->read($buf,$READ_SZ);
     $c .= $buf;
     # Extract as many whole sections as possible, process, then
     # continue on
@@ -191,7 +194,7 @@ sub next {
         # out directly in any format
         my ($data) = $self->_parse_interval($coredata);
         $data->{datetime} = $dt;
-        push @data, $data;
+        push @{$self->interval_data}, $data;
       }
       # Delete what we've parsed so far...
       if ($self->datastream->eof) {
@@ -201,8 +204,13 @@ sub next {
       }
       $self->record_count($self->record_count + $drops);
     }
+  } until (scalar(@{$self->interval_data}) or $self->datastream->eof);
+
+  if ( scalar(@{$self->interval_data}) ) {
+    return shift @{$self->interval_data};
+  } else {
+    return;  # undef
   }
-  $self->interval_data(\@data);
 
   ##### INITIAL BAD IDEA
 #  my (@data) = @{$self->data};
