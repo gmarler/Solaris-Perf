@@ -24,4 +24,12 @@ __PACKAGE__->set_primary_key('id');
 #  fs => 'Solaris::Perf::Schema::FS', 'host_id'
 #);
 
+#__PACKAGE__->has_many(
+#  zpool => 'Solaris::Perf::Schema::Zpool', 'host_id'
+#);
+#
+#__PACKAGE__->has_many(
+#  interval => 'Solaris::Perf::Schema::Interval', 'host_id'
+#);
+
 1;
