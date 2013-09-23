@@ -19,7 +19,8 @@ my $schema       = Solaris::Perf::Schema->connect($connect_info);
 my $dh = DH->new({
   schema           => $schema,
   script_directory => "$FindBin::Bin/../dbicdh",
-  databases        => 'PostgreSQL',
+  #databases        => 'PostgreSQL',
+  databases        => [ qw(PostgresSQL SQLite) ],
 });
  
 sub install {

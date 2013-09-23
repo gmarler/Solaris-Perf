@@ -21,15 +21,17 @@ __PACKAGE__->add_columns(
 __PACKAGE__->set_primary_key('id');
 
 #__PACKAGE__->has_many(
-#  fs => 'Solaris::Perf::Schema::FS', 'host_id'
+#  fs => 'Solaris::Perf::Schema::Result::FS', 'host_id'
 #);
 
-#__PACKAGE__->has_many(
-#  zpool => 'Solaris::Perf::Schema::Zpool', 'host_id'
-#);
-#
-#__PACKAGE__->has_many(
-#  interval => 'Solaris::Perf::Schema::Interval', 'host_id'
-#);
+__PACKAGE__->has_many(
+  zpools =>
+    'Solaris::Perf::Schema::Result::Zpool',
+);
+
+__PACKAGE__->has_many(
+  intervals =>
+    'Solaris::Perf::Schema::Result::Interval',
+);
 
 1;

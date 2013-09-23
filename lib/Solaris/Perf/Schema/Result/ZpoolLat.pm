@@ -13,6 +13,9 @@ __PACKAGE__->add_columns(
     data_type         => 'integer',
     is_auto_increment => 1,
   },
+  interval => {
+    data_type         => 'integer',
+  },
   bucket => {
     data_type         => 'integer',
   },
@@ -24,7 +27,8 @@ __PACKAGE__->add_columns(
 __PACKAGE__->set_primary_key('id');
 
 __PACKAGE__->belongs_to(
-    host => Solaris::Perf::Schema::Interval',
-    interval_id);
+    interval =>
+      'Solaris::Perf::Schema::Result::Interval',
+    );
 
-
+1;
