@@ -3,8 +3,6 @@ package TF::Solaris::PerfParser::ZpoolLatency;
 
 use Path::Class::File ();
 
-#use Test::Class::Moose parent =>
-#    'MTC::AutoUse';
 use Test::Class::Moose;
 with 'Test::Class::Moose::Role::AutoUse';
 
