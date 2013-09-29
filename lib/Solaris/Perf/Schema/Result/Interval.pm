@@ -13,9 +13,6 @@ __PACKAGE__->add_columns(
     data_type         => 'integer',
     is_auto_increment => 1,
   },
-  host => {
-    data_type         => 'integer',
-  },
   start => {
     data_type         => 'datetime',
   },
@@ -24,14 +21,5 @@ __PACKAGE__->add_columns(
 
 __PACKAGE__->set_primary_key('id');
 
-__PACKAGE__->belongs_to(
-    'hostinterval' =>
-      'Solaris::Perf::Schema::Result::HostInterval'
-    );
-
-__PACKAGE__->has_many(
-  zpoollats =>
-    'Solaris::Perf::Schema::Result::ZpoolLat',
-);
 
 1;
