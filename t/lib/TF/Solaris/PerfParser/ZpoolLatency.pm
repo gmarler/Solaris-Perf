@@ -10,20 +10,14 @@ with 'Test::Class::Moose::Role::AutoUse';
 BEGIN { use Solaris::Perf; }
 
 sub test_startup {
-  my ($test, $report) = @_
+  my ($test, $report) = @_;
   $test->next::method;
 
   use Test::DBIx::Class {
     schema_class => 'Solaris::Perf::Schema',
-  }, 'Host', 'Zpool', 'IOAction', 'Interval', 'ZPoolLat';
+  }, 'Host';
+#  }, 'Host', 'Zpool', 'IOAction', 'Interval', 'ZPoolLat';
 
-  fixtures_ok [ 
-    Host => [
-      [qw/name/],
-      ["fwsse37"],
-      ["kaos"],
-    ],
-  ], 'Installed some custom fixtures via the Populate fixture class';
 }
 
 
@@ -72,11 +66,18 @@ sub test_scan {
 sub test_dbic_insertion {
   my ($test, $report) = @_;
 
-# ensure DB now has 2 records
+  fixtures_ok [ 
+    Host => [
+      [qw/name/],
+      ["fwsse37"],
+      ["kaos"],
+    ],
+  ], 'Installed some custom fixtures via the Populate fixture class';
+
+  # ensure DB now has 2 records
   is Host->count, 2, 'now 2 records in host table';
 
   is_resultset Host;
-
 }
 
 1;

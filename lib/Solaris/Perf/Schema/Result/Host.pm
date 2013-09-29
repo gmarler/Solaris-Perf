@@ -25,7 +25,9 @@ __PACKAGE__->set_primary_key('id');
 __PACKAGE__->has_many(
   host_zpools =>
     'Solaris::Perf::Schema::Result::HostZpool',
-    'host_id'
+    'host_id',
+    # TODO: We may need to eliminate the below later...
+    { cascade_delete => 0 }
 );
 
 __PACKAGE__->many_to_many(
@@ -37,7 +39,9 @@ __PACKAGE__->many_to_many(
 __PACKAGE__->has_many(
   host_intervals =>
     'Solaris::Perf::Schema::Result::HostInterval',
-    'host_id'
+    'host_id',
+    # TODO: We may need to eliminate the below later...
+    { cascade_delete => 0 }
 );
 
 __PACKAGE__->many_to_many(
