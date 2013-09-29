@@ -26,14 +26,14 @@ __PACKAGE__->add_columns(
 
 __PACKAGE__->set_primary_key('id');
 
-__PACKAGE__->belongs_to(
-    interval =>
-      'Solaris::Perf::Schema::Result::Interval',
-    );
-
-__PACKAGE__->belongs_to(
-    ioaction =>
-      'Solaris::Perf::Schema::Result::IOAction',
-    );
+#__PACKAGE__->belongs_to(
+#    interval =>
+#      'Solaris::Perf::Schema::Result::Interval',
+#    );
+#
+#__PACKAGE__->belongs_to(
+#    ioaction =>
+#      'Solaris::Perf::Schema::Result::IOAction',
+#    );
 
 1;
