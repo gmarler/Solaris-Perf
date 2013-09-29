@@ -23,11 +23,13 @@ __PACKAGE__->set_primary_key('host_id', 'zpool_id');
 __PACKAGE__->belongs_to(
   host =>
     'Solaris::Perf::Schema::Result::Host',
+    'host_id'
 );
 
 __PACKAGE__->belongs_to(
   zpool =>
     'Solaris::Perf::Schema::Result::Zpool',
+    'zpool_id'
 );
 
 
