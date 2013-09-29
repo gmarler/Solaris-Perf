@@ -31,4 +31,9 @@ __PACKAGE__->belongs_to(
       'Solaris::Perf::Schema::Result::Interval',
     );
 
+__PACKAGE__->belongs_to(
+    ioaction =>
+      'Solaris::Perf::Schema::Result::IOAction',
+    );
+
 1;

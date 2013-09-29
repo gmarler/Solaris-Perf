@@ -6,6 +6,28 @@ use Path::Class::File ();
 use Test::Class::Moose;
 with 'Test::Class::Moose::Role::AutoUse';
 
+# Set up for schema
+BEGIN { use Solaris::Perf; }
+
+sub test_startup {
+  my ($test, $report) = @_
+  $test->next::method;
+
+  use Test::DBIx::Class {
+    schema_class => 'Solaris::Perf::Schema',
+  }, 'Host', 'Zpool', 'IOAction', 'Interval', 'ZPoolLat';
+
+  fixtures_ok [ 
+    Host => [
+      [qw/name/],
+      ["fwsse37"],
+      ["kaos"],
+    ],
+  ], 'Installed some custom fixtures via the Populate fixture class';
+}
+
+
+
 sub constructor_args {
   my $filepath =
     Path::Class::File->new(__FILE__)->parent->parent->parent->parent->parent
@@ -45,6 +67,16 @@ sub test_scan {
   cmp_ok($p->record_count, '==', 112, 'record_count == 112 records');
 
   ok($p->datastream->eof, "should be at EOF");
+}
+
+sub test_dbic_insertion {
+  my ($test, $report) = @_;
+
+# ensure DB now has 2 records
+  is Host->count, 2, 'now 2 records in host table';
+
+  is_resultset Host;
+
 }
 
 1;
