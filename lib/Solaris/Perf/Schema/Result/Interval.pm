@@ -13,9 +13,6 @@ __PACKAGE__->add_columns(
     data_type         => 'integer',
     is_auto_increment => 1,
   },
-  host => {
-    data_type         => 'integer',
-  },
   start => {
     data_type         => 'datetime',
   },
@@ -24,8 +21,5 @@ __PACKAGE__->add_columns(
 
 __PACKAGE__->set_primary_key('id');
 
-__PACKAGE__->belongs_to(
-    'host' => 'Solaris::Perf::Schema::Result::Host'
-    );
 
 1;
