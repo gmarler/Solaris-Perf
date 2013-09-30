@@ -23,29 +23,45 @@ __PACKAGE__->set_primary_key('id');
 
 ####
 __PACKAGE__->has_many(
-  host_zpools =>
-    'Solaris::Perf::Schema::Result::HostZpool',
-    'host_id',
-    # TODO: We may need to eliminate the below later...
-    { cascade_delete => 0 }
+  # Name of accessor
+  'host_zpools',
+  # Related Class
+  'Solaris::Perf::Schema::Result::HostZpool',
+  # Relationship
+  { 'foreign.host_id' => 'self.id' },
+  # Attributes
+  # TODO: We may need to eliminate the below later...
+  { cascade_delete => 0 }
 );
 
 __PACKAGE__->many_to_many(
-  zpools => 'host_zpools',
+  # Accessor Name
+  zpools
+       # has_many accessor name in this class
+    => 'host_zpools',
+  # Foreign relationship name
   'zpool_id'
 );
 
 ####
 __PACKAGE__->has_many(
-  host_intervals =>
-    'Solaris::Perf::Schema::Result::HostInterval',
-    'host_id',
-    # TODO: We may need to eliminate the below later...
-    { cascade_delete => 0 }
+  # Accessor name
+  'host_intervals',
+  # Related Class
+  'Solaris::Perf::Schema::Result::HostInterval',
+  # Relationship
+  { 'foreign.host_id' => 'self.id' },
+  # Attributes
+  # TODO: We may need to eliminate the below later...
+  { cascade_delete => 0 }
 );
 
 __PACKAGE__->many_to_many(
-  intervals => 'host_intervals',
+  # Accessor name
+  intervals
+    # has_many accessor name in this class
+    => 'host_intervals',
+    # Foreign relationship name
     'interval_id'
 );
 

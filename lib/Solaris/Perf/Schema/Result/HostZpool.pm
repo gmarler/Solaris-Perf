@@ -21,9 +21,12 @@ __PACKAGE__->set_primary_key('host_id', 'zpool_id');
 
 
 __PACKAGE__->belongs_to(
-  host =>
-    'Solaris::Perf::Schema::Result::Host',
-    'host_id'
+  # Accessor
+  'host',
+  # Related Class
+  'Solaris::Perf::Schema::Result::Host',
+  # Relationship
+  { id => 'host_id' }
 );
 
 __PACKAGE__->belongs_to(
