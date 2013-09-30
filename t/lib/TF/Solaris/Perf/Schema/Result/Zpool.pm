@@ -16,24 +16,24 @@ sub test_startup {
   }, 'Zpool';
 }
 
-#sub test_dbic_insertion {
-#  my ($test, $report) = @_;
-#
-#  fixtures_ok [ 
-#    Host => [
-#      [qw/name/],
-#      ["fwsse37"],
-#      ["kaos"],
-#      ["control"],
-#      ["nydevsol10"],
-#      ["nydevsol11"],
-#   ],
-#  ], 'Installed some custom fixtures via the Populate fixture class';
-#
-#  # ensure DB now has 2 records
-#  is Host->count, 2, 'now 2 records in host table';
-#
-#  is_resultset Host;
-#}
+sub test_dbic_insertion {
+  my ($test, $report) = @_;
+
+  fixtures_ok [ 
+    Zpool => [
+      [qw/zpool_name/],
+      ["rpool"],
+      ["kaos_fs"],
+      ["control_fs"],
+      ["nydevsol10_fs"],
+      ["nydevsol11_fs"],
+   ],
+  ], 'Installed some custom fixtures via the Populate fixture class';
+
+  # ensure DB now has 5 records
+  is Zpool->count, 5, 'now 5 records in host table';
+
+  is_resultset Zpool;
+}
 
 1;
