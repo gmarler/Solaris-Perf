@@ -13,7 +13,7 @@ sub test_startup {
 
   use Test::DBIx::Class {
     schema_class => 'Solaris::Perf::Schema',
-  }, 'Host', 'Zpool';
+  }, 'Host', 'Zpool', 'HostZpool';
 }
 
 sub test_dbic_insertion {
@@ -48,11 +48,11 @@ sub test_dbic_insertion {
       zpool_name => 'alder_fs',
   });
   # Another way to do the same thing (different zpool for same host)
-  $alder->add_to_zpools(
-    {
-      'zpool_name' => 'rpool',
-    }
-  );
+  #$alder->add_to_zpools(
+  #  {
+  #    'zpool_name' => 'rpool',
+  #  }
+  #);
 }
 
 1;

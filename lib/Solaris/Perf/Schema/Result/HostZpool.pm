@@ -26,13 +26,16 @@ __PACKAGE__->belongs_to(
   # Related Class
   'Solaris::Perf::Schema::Result::Host',
   # Relationship
-  { id => 'host_id' }
+  { 'foreign.id' => 'self.host_id' }
 );
 
 __PACKAGE__->belongs_to(
-  zpool =>
-    'Solaris::Perf::Schema::Result::Zpool',
-    'zpool_id'
+  # Accessor
+  'zpool',
+  # Related Class
+  'Solaris::Perf::Schema::Result::Zpool',
+  # Relationship
+  { 'foreign.id' => 'self.zpool_id' }
 );
 
 
