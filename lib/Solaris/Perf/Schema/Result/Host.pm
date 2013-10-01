@@ -44,25 +44,25 @@ __PACKAGE__->many_to_many(
 );
 
 ####
-#__PACKAGE__->has_many(
-#  # Accessor name
-#  'host_intervals',
-#  # Related Class
-#  'Solaris::Perf::Schema::Result::HostInterval',
-#  # Relationship
-#  { 'foreign.host_id' => 'self.id' },
-#  # Attributes
-#  # TODO: We may need to eliminate the below later...
-#  { cascade_delete => 0 }
-#);
-#
-#__PACKAGE__->many_to_many(
-#  # Accessor name
-#  intervals
-#    # has_many accessor name in this class
-#    => 'host_intervals',
-#    # Foreign relationship name
-#    'interval_id'
-#);
+__PACKAGE__->has_many(
+  # Accessor name
+  'host_intervals',
+  # Related Class
+  'Solaris::Perf::Schema::Result::HostInterval',
+  # Relationship
+  { 'foreign.host_id' => 'self.id' },
+  # Attributes
+  # TODO: We may need to eliminate the below later...
+  { cascade_delete => 0 }
+);
+
+__PACKAGE__->many_to_many(
+  # Accessor name
+  intervals
+    # has_many accessor name in this class
+    => 'host_intervals',
+    # Foreign belongs_to() accessor name
+    'interval'
+);
 
 1;
