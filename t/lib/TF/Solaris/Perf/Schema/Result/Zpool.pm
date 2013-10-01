@@ -13,27 +13,45 @@ sub test_startup {
 
   use Test::DBIx::Class {
     schema_class => 'Solaris::Perf::Schema',
-  }, 'Zpool';
+  }, 'Host', 'Zpool';
 }
 
-#sub test_dbic_insertion {
-#  my ($test, $report) = @_;
-#
-#  fixtures_ok [ 
-#    Host => [
-#      [qw/name/],
-#      ["fwsse37"],
-#      ["kaos"],
-#      ["control"],
-#      ["nydevsol10"],
-#      ["nydevsol11"],
-#   ],
-#  ], 'Installed some custom fixtures via the Populate fixture class';
-#
-#  # ensure DB now has 2 records
-#  is Host->count, 2, 'now 2 records in host table';
-#
-#  is_resultset Host;
-#}
+sub test_dbic_insertion {
+  my ($test, $report) = @_;
+
+  fixtures_ok [ 
+    Zpool => [
+      [qw/zpool_name/],
+      ["rpool"],
+      ["kaos_fs"],
+      ["control_fs"],
+      ["nydevsol10_fs"],
+      ["nydevsol11_fs"],
+   ],
+   Host   => [
+      [qw/name/],
+      ["alder"],
+   ],
+  ], 'Installed some custom fixtures via the Populate fixture class';
+
+  # ensure DB now has 5 records
+  is Zpool->count, 5, 'now 5 records in host table';
+
+  is_resultset Zpool;
+
+  ok my $alder = Host->find_or_create({name => 'alder'}) =>
+    'Should insert/create new host alder';
+  # Insert related zpools for host alder
+  #$alder->create_related(
+  #  'zpools', {
+  #    zpool_name => 'alder_fs',
+  #});
+  # Another way to do the same thing (different zpool for same host)
+  $alder->add_to_zpools(
+    {
+      zpool_name => 'rpool',
+    }
+  );
+}
 
 1;

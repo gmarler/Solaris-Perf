@@ -38,7 +38,7 @@ sub test_dbic_insertion {
   is_resultset Host;
 }
 
-sub test_host_lookup {
+sub test_host_ops {
   my ($test, $report) = @_;
 
   # positive existence
@@ -51,23 +51,30 @@ sub test_host_lookup {
     'Should find existing host nydevsol10';
   is_fields 'name', $exists, [ 'nydevsol10' ] =>
     'Found nydevsol10';
-  ok my $new_host = Host->find_or_create({name => 'proteus'}) =>
-    'Should create new host proteus';
-  is_fields [ qw/name/ ], $new_host, [ 'proteus' ] =>
-    'Found proteus';
+
   # negative existence
   my $ne_host = Host->find({name => 'ether'});
   is $ne_host, undef, 'Non-existent host not found, as expected';
-  # TODO: Deletion
-  # Weird errors about Zpool here...
-  #warn Dumper $host;
+
+  # Deletion
+  # NOTE: Had to disable cascading deletes for the short term, as we
+  #       haven't installed fixtures for other tables yet
   ok $host->delete => 'Deleting kaos successfully';
   my $del_host = Host->find({name => 'kaos'});
   is $del_host, undef, 'kaos is now gone';
+
   # Rename
-  ok $new_host->update({name => 'Denise'}) =>
-    'proteus has been renamed to Denise';
+  ok $exists->update({name => 'Denise'}) =>
+    'Renaming nydevsol10 to Denise';
+  is_fields [ qw/name/ ], $exists, [ 'Denise' ] =>
+    'Verify nydevsol10 renamed to Denise';
+
   # Insertion
+  ok my $new_host = Host->find_or_create({name => 'proteus'}) =>
+    'Should insert/create new host proteus';
+  is_fields [ qw/name/ ], $new_host, [ 'proteus' ] =>
+    'Found newly created proteus';
+  
   # Verify all rows
 }
 
