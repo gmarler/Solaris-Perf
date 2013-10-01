@@ -41,15 +41,16 @@ sub test_dbic_insertion {
 
   ok my $alder = Host->find_or_create({name => 'alder'}) =>
     'Should insert/create new host alder';
+  isa_ok $alder, 'DBIx::Class::Row', "returned alder is a Row";
   # Insert related zpools for host alder
-  #$alder->create_related(
-  #  'zpools', {
-  #    zpool_name => 'alder_fs',
-  #});
+  $alder->create_related(
+    'zpools', {
+      zpool_name => 'alder_fs',
+  });
   # Another way to do the same thing (different zpool for same host)
   $alder->add_to_zpools(
     {
-      zpool_name => 'rpool',
+      'zpool_name' => 'rpool',
     }
   );
 }
