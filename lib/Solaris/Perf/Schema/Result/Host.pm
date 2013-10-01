@@ -39,8 +39,8 @@ __PACKAGE__->many_to_many(
   zpools
        # has_many accessor name in this class
     => 'host_zpools',
-  # Foreign relationship name
-  'zpool_id'
+  # Foreign belongs_to() accessor name
+  'zpool'
 );
 
 ####

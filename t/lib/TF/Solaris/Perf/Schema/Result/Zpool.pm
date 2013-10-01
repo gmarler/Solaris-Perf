@@ -5,7 +5,7 @@ use Test::Class::Moose;
 with 'Test::Class::Moose::Role::AutoUse';
 
 # Set up for schema
-BEGIN { use Solaris::Perf; }
+BEGIN { use Solaris::Perf::Schema; }
 
 sub test_startup {
   my ($test, $report) = @_;
