@@ -8,6 +8,7 @@ package Solaris::PerfParser::ZpoolLatency;
 use namespace::autoclean;
 
 use Moose;
+use namespace::autoclean;
 use IO::File                   qw();
 use DateTime::Format::Strptime qw();
 use DateTime::Set              qw();

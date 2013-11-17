@@ -80,6 +80,4 @@ sub test_dbic_insertion {
   is_resultset Host;
 }
 
-__PACKAGE__->meta->make_immutable;
-
 1;
