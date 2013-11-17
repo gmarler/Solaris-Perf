@@ -277,4 +277,7 @@ sub _parse_record {
   return \%bucket_data;
 }
 
+
+__PACKAGE__->meta->make_immutable;
+
 1;
