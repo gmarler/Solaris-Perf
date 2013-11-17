@@ -21,5 +21,17 @@ __PACKAGE__->add_columns(
 
 __PACKAGE__->set_primary_key('id');
 
+####
+__PACKAGE__->has_many(
+  # Name of accessor
+  'host_intervals',
+  # Related Class
+  'Solaris::Perf::Schema::Result::HostInterval',
+  # Relationship
+  { 'foreign.interval_id' => 'self.id' },
+  # Attributes
+  # TODO: We may need to eliminate the below later...
+  # { cascade_delete => 0 }
+);
 
 1;

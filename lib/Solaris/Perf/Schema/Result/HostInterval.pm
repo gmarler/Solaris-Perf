@@ -21,15 +21,21 @@ __PACKAGE__->set_primary_key('host_id','interval_id');
 
 
 __PACKAGE__->belongs_to(
-  host =>
-    'Solaris::Perf::Schema::Result::Host',
-    'host_id'
+  # Accessor
+  'host',
+  # Related Class
+  'Solaris::Perf::Schema::Result::Host',
+  # Relationship
+  'host_id'
 );
 
 __PACKAGE__->belongs_to(
-  interval =>
-    'Solaris::Perf::Schema::Result::Interval',
-    'interval_id'
+  # Accessor
+  'interval',
+  # Related Class
+  'Solaris::Perf::Schema::Result::Interval',
+  # Relationship
+  'interval_id'
 );
 
 

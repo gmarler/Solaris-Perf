@@ -5,7 +5,7 @@ use Test::Class::Moose;
 with 'Test::Class::Moose::Role::AutoUse';
 
 # Set up for schema
-BEGIN { use Solaris::Perf; }
+BEGIN { use Solaris::Perf::Schema; }
 
 sub test_startup {
   my ($test, $report) = @_;
@@ -35,7 +35,7 @@ sub test_dbic_insertion {
   ], 'Installed some custom fixtures via the Populate fixture class';
 
   # ensure DB now has 5 records
-  is Zpool->count, 5, 'now 5 records in host table';
+  is ResultSet('Zpool')->count, 5, 'now 5 records in host table';
 
   is_resultset Zpool;
 
