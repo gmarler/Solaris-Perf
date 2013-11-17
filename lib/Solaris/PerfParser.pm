@@ -196,6 +196,7 @@ sub next {
 }
 
 
-__PACKAGE__->meta->make_immutable;
+# This doesn't seem to work for Roles
+# __PACKAGE__->meta->make_immutable;
 
 1;
