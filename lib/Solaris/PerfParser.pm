@@ -130,7 +130,7 @@ sub scan {
         chomp $dt_stamp;
         ($coredata = $data) =~ s/ $dt_regex //smx;
         # Rip out the time zone so parse_datetime will accept the $dtstamp
-        $dt_stamp =~ s{\w+ (\d{4})$}{\1};
+        $dt_stamp =~ s{\w+ (\d{4})$}{$1};
         my ($dt) = $strp->parse_datetime($dt_stamp);
         # TODO: Find a way to store the $coredata we need to examine eventually
         # push @{$dt_aref} = $dt;
