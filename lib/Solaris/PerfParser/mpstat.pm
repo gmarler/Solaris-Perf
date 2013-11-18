@@ -14,14 +14,14 @@ sub _build_dt_regex {
                 \d+ \s+          # day of month
                 \d+:\d+:\d+ \s+  # HH:MM:DD  (24 hour clock)
                 \w+ \s+          # Time zone (useless)
-                \d{4} \s+        # year
+                \d{4}            # year
                 \n
             )
            }smx;
 }
 
 sub _build_strptime_pattern {
-  return "%A %B %d %T %z %Y";
+  return "%A %B %d %T %Y";
 }
 
 __PACKAGE__->meta->make_immutable;

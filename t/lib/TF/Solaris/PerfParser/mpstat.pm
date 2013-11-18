@@ -45,6 +45,66 @@ sub test_constructor {
   can_ok($p, qw(new scan record_count datastream) );
 }
 
+#
+# This is a test of the regex for all *stat commands, particularly the
+# date/time stamp followed by a blob of "data"
+#
+sub test_dt_regex {
+  my ($test, $report) = @_;
+
+  my $filepath =
+    Path::Class::File->new(__FILE__)->parent->parent->parent->parent->parent
+                     ->file("data","mpstat-1sInt-15sDur-x64.out")
+                     ->absolute->stringify;
+
+  #  Test datafile should exist
+  ok( -f $filepath, "$filepath should exist");
+
+  my $ds = IO::File->new($filepath,"<");
+
+  # Read the whole file into memory
+  my $c = do { local $/; <$ds>; };
+  $ds->close;
+
+  my $dt_regex =
+           qr{^
+            (?: (?:Sun|Mon|Tue|Wed|Thu|Fri|Sat) \s+ # Day of week
+                (?:Jan|Feb|Mar|Apr|May|Jun|
+                   Jul|Aug|Sep|Oct|Nov|Dec
+                ) \s+
+                \d+ \s+          # day of month
+                \d+:\d+:\d+ \s+  # HH:MM:DD  (24 hour clock)
+                \w+ \s+          # Time zone (useless)
+                \d{4}            # year
+                \n
+            )
+           }smx;
+
+  my $regex =
+    qr{(
+         $dt_regex   # date-timestamp
+         (?:.+?)     # all data after date-timestamp
+       )
+       # Up to, but not including, the next date/timestamp
+       # (?= (?: $dt_regex | \z ) )
+       (?= (?: $dt_regex ) )
+      }smx;
+
+  my $regex_eof =
+    qr{(
+         $dt_regex   # date-timestamp
+         (?:.+?)     # all data after date-timestamp
+       )
+       # Up to, but not including, the next date/timestamp
+       (?= (?: $dt_regex | \z ) )
+      }smx;
+
+  my @subs;
+  @subs = $c =~ m{ $regex_eof }gsmx;
+
+  cmp_ok(scalar @subs, '==', 15, 'mpstat matches == 15');
+}
+
 sub test_scan {
   my ($test, $report) = @_;
 
@@ -53,9 +113,9 @@ sub test_scan {
 
   $p->scan();
 
-  # - There should be 112 "stanzas" in this data file, each prefixed by a
+  # - There should be 15 "stanzas" in this data file, each prefixed by a
   #   timestamp
-  cmp_ok($p->record_count, '==', 112, 'record_count == 112 records');
+  cmp_ok($p->record_count, '==', 15, 'record_count == 15 records');
 
   ok($p->datastream->eof, "should be at EOF");
 }

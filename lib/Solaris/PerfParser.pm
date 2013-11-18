@@ -98,9 +98,10 @@ sub scan {
   my ($self) = shift;
 
   my ($buf, $c);
-  my ($regex) = $self->regex;
+  my ($dt_regex)  = $self->dt_regex;
+  my ($regex)     = $self->regex;
   my ($regex_eof) = $self->regex_eof;
-  my ($READ_SZ) = $self->read_chunk;
+  my ($READ_SZ)   = $self->read_chunk;
 
   my $strp = DateTime::Format::Strptime->new(
     pattern   => $self->strptime_pattern,
@@ -125,9 +126,11 @@ sub scan {
       for (my $i = 0; $i < scalar(@subs); $i++) {
         $data = $subs[$i];
         # Break out timestamp, parse into DateTime object
-        ($dt_stamp) = $data =~ m/ ($self->dt_regex) /smx;
+        ($dt_stamp) = $data =~ m/ ($dt_regex) /smx;
         chomp $dt_stamp;
-        ($coredata = $data) =~ s/ $self->dt_regex //smx;
+        ($coredata = $data) =~ s/ $dt_regex //smx;
+        # Rip out the time zone so parse_datetime will accept the $dtstamp
+        $dt_stamp =~ s{\w+ (\d{4})$}{\1};
         my ($dt) = $strp->parse_datetime($dt_stamp);
         # TODO: Find a way to store the $coredata we need to examine eventually
         # push @{$dt_aref} = $dt;
