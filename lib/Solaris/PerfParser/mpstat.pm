@@ -1,3 +1,6 @@
+use strict;
+use warnings;
+
 package Solaris::PerfParser::mpstat;
 
 use Moose;

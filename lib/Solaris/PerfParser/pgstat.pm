@@ -16,8 +16,8 @@ sub _build_dt_regex {
                 ) \s+
                 \d+ \s+          # day of month
                 \d+:\d+:\d+ \s+  # HH:MM:DD  (24 hour clock)
-                \w+ \s+          # Time zone (useless)
-                \d{4}            # year
+                \d{4} \s+        # year
+                \w+              # Time zone (useless)
                 \n
             )
            }smx;
