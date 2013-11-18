@@ -14,6 +14,9 @@ use DateTime::Set              qw();
 use DateTime::Span             qw();
 use Fcntl                      qw(SEEK_SET);
 
+requires 'dt_regex';
+requires 'strptime_pattern';
+
 has 'datastream' => ( is       => 'rw',
                       isa      => 'IO::File',
                       required => 1,
@@ -27,28 +30,36 @@ has 'read_chunk'   => ( is => 'ro', isa => 'Int', default => 65536 );
 
 # The Date/Time regex, should be universal across all *stat and other
 # data gathering applications
-my $dt_regex = qr{^
-                   (?: \d{4} \s+     # year
-                       (?:Jan|Feb|Mar|Apr|May|Jun|
-                          Jul|Aug|Sep|Oct|Nov|Dec
-                       ) \s+
-                       \d+ \s+       # day of month
-                       \d+:\d+:\d+   # HH:MM:DD  (24 hour clock)
-                       \n
-                   )
-                 }smx;
+#has 'dt_regex' => ( is => 'ro', isa => 'RegexpRef',
+#                    default => sub {
+#                    qr{^
+#                        (?: \d{4} \s+     # year
+#                          (?:Jan|Feb|Mar|Apr|May|Jun|
+#                            Jul|Aug|Sep|Oct|Nov|Dec
+#                          ) \s+
+#                          \d+ \s+       # day of month
+#                          \d+:\d+:\d+   # HH:MM:DD  (24 hour clock)
+#                          \n
+#                        )
+#                      }smx;
+#                    },
+#                  );
+
+#has 'strptime_pattern' => ( is => 'ro', isa => 'Str',
+#                            default => "%A %B %d %T %z %Y" );
 
 # Regex used to pull individual records from the input, breaking them up into
 # a datetime stamp, and the raw data (as $1 and $2)
 has 'regex'    => ( is => 'rw', isa => 'RegexpRef',
                     default => sub {
+                                 my $self = shift;
                                qr{(
-                                    $dt_regex   # date-timestamp
+                                    $self->dt_regex   # date-timestamp
                                     (?:.+?)     # all data after date-timestamp
                                   )
                                   # Up to, but not including, the next date/timestamp
-                                  # (?= (?: $dt_regex | \z ) )
-                                  (?= (?: $dt_regex ) )
+                                  # (?= (?: $self->dt_regex | \z ) )
+                                  (?= (?: $self->dt_regex ) )
                                  }smx;
                                },
                   );
@@ -56,12 +67,13 @@ has 'regex'    => ( is => 'rw', isa => 'RegexpRef',
 # regex to use at EOF
 has 'regex_eof' => ( is => 'rw', isa => 'RegexpRef',
                     default => sub {
+                                 my $self = shift;
                                qr{(
-                                    $dt_regex   # date-timestamp
+                                    $self->dt_regex   # date-timestamp
                                     (?:.+?)     # all data after date-timestamp
                                   )
                                   # Up to, but not including, the next date/timestamp
-                                  (?= (?: $dt_regex | \z ) )
+                                  (?= (?: $self->dt_regex | \z ) )
                                  }smx;
                                },
                   );
@@ -75,7 +87,7 @@ sub scan {
   my ($READ_SZ) = $self->read_chunk;
 
   my $strp = DateTime::Format::Strptime->new(
-    pattern   => '%Y %B %d %T',
+    pattern   => $self->strptime_pattern,
     time_zone => 'floating',
     on_error  => 'croak',
   );
@@ -97,9 +109,9 @@ sub scan {
       for (my $i = 0; $i < scalar(@subs); $i++) {
         $data = $subs[$i];
         # Break out timestamp, parse into DateTime object
-        ($dt_stamp) = $data =~ m/ ($dt_regex) /smx;
+        ($dt_stamp) = $data =~ m/ ($self->dt_regex) /smx;
         chomp $dt_stamp;
-        ($coredata = $data) =~ s/ $dt_regex //smx;
+        ($coredata = $data) =~ s/ $self->dt_regex //smx;
         my ($dt) = $strp->parse_datetime($dt_stamp);
         # TODO: Find a way to store the $coredata we need to examine eventually
         # push @{$dt_aref} = $dt;
@@ -168,9 +180,9 @@ sub next {
       for (my $i = 0; $i < scalar(@subs); $i++) {
         $data = $subs[$i];
         # Break out timestamp, parse into DateTime object
-        ($dt_stamp) = $data =~ m/ ($dt_regex) /smx;
+        ($dt_stamp) = $data =~ m/ ($self->dt_regex) /smx;
         chomp $dt_stamp;
-        ($coredata = $data) =~ s/ $dt_regex //smx;
+        ($coredata = $data) =~ s/ $self->dt_regex //smx;
         my ($dt) = $strp->parse_datetime($dt_stamp);
         # TODO: Parse the individual data sections into something we can print
         # out directly in any format
