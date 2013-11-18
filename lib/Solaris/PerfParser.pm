@@ -14,8 +14,8 @@ use DateTime::Set              qw();
 use DateTime::Span             qw();
 use Fcntl                      qw(SEEK_SET);
 
-requires 'dt_regex';
-requires 'strptime_pattern';
+requires '_build_dt_regex';
+requires '_build_strptime_pattern';
 
 has 'datastream' => ( is       => 'rw',
                       isa      => 'IO::File',
@@ -30,7 +30,13 @@ has 'read_chunk'   => ( is => 'ro', isa => 'Int', default => 65536 );
 
 # The Date/Time regex, should be universal across all *stat and other
 # data gathering applications
-#has 'dt_regex' => ( is => 'ro', isa => 'RegexpRef',
+has 'dt_regex' => (
+  is      => 'ro',
+  isa     => 'RegexpRef',
+  lazy    => 1,
+  builder => '_build_dt_regex',
+);
+
 #                    default => sub {
 #                    qr{^
 #                        (?: \d{4} \s+     # year
@@ -47,36 +53,46 @@ has 'read_chunk'   => ( is => 'ro', isa => 'Int', default => 65536 );
 
 #has 'strptime_pattern' => ( is => 'ro', isa => 'Str',
 #                            default => "%A %B %d %T %z %Y" );
+has 'strptime_pattern' => (
+  is      => 'ro',
+  isa     => 'Str',
+  lazy    => 1,
+  builder => '_build_strptime_pattern',
+);
 
 # Regex used to pull individual records from the input, breaking them up into
 # a datetime stamp, and the raw data (as $1 and $2)
 has 'regex'    => ( is => 'rw', isa => 'RegexpRef',
+                    lazy => 1, # Must be lazy because it depends on dt_regex
                     default => sub {
                                  my $self = shift;
+                                 my $dt_regex = $self->dt_regex;
                                qr{(
-                                    $self->dt_regex   # date-timestamp
+                                    $dt_regex   # date-timestamp
                                     (?:.+?)     # all data after date-timestamp
                                   )
                                   # Up to, but not including, the next date/timestamp
                                   # (?= (?: $self->dt_regex | \z ) )
-                                  (?= (?: $self->dt_regex ) )
+                                  (?= (?: $dt_regex ) )
                                  }smx;
                                },
                   );
 
 # regex to use at EOF
 has 'regex_eof' => ( is => 'rw', isa => 'RegexpRef',
-                    default => sub {
-                                 my $self = shift;
-                               qr{(
-                                    $self->dt_regex   # date-timestamp
-                                    (?:.+?)     # all data after date-timestamp
-                                  )
-                                  # Up to, but not including, the next date/timestamp
-                                  (?= (?: $self->dt_regex | \z ) )
-                                 }smx;
-                               },
-                  );
+                     lazy => 1, # Must be lazy because it depends on dt_regex
+                     default => sub {
+                                  my $self = shift;
+                                  my $dt_regex = $self->dt_regex;
+                                qr{(
+                                     $dt_regex   # date-timestamp
+                                     (?:.+?)     # all data after date-timestamp
+                                   )
+                                   # Up to, but not including, the next date/timestamp
+                                   (?= (?: $dt_regex | \z ) )
+                                  }smx;
+                                },
+                   );
 
 sub scan {
   my ($self) = shift;
