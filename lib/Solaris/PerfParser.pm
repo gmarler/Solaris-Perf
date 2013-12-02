@@ -16,11 +16,17 @@ use Fcntl                      qw(SEEK_SET);
 
 requires '_build_dt_regex';
 requires '_build_strptime_pattern';
+requires '_parse_interval';
 
 has 'datastream' => ( is       => 'rw',
                       isa      => 'IO::File',
                       required => 1,
                     );
+
+has 'interval_data' => ( is      => 'rw',
+                         isa     => 'ArrayRef[HashRef]',
+                         default => sub { [] },
+                       );
 
 # Number of records discovered in the scan
 has 'record_count' => ( is => 'rw', isa => 'Int', default => 0 );
@@ -158,7 +164,7 @@ sub reset {
 =head2 next
 
 Pull all the records for the next time interval off of the datastream and
-print them in the desired format, JSON by default
+store them in the object's interval_data attribute
 
 =cut
 
@@ -169,21 +175,25 @@ sub next {
   # Use a static/stateful variable, as between calls it's likely that you'll
   # have partially consumed/parsed data that you've read from the datastream
   state $c = '';
-  my ($regex) = $self->regex;
+  my ($dt_regex)  = $self->dt_regex;
+  my ($regex)     = $self->regex;
   my ($regex_eof) = $self->regex_eof;
-  my ($READ_SZ) = $self->read_chunk;
+  my ($READ_SZ)   = $self->read_chunk;
 
   my $strp = DateTime::Format::Strptime->new(
-    pattern   => '%Y %B %d %T',
+    pattern   => $self->strptime_pattern,
     #pattern   => '%A,%t%B%t%d,%t%Y%t%I:%M:%S%t%p',
     time_zone => 'floating',
     on_error  => 'croak',
   );
 
+  # If we have already parsed data, return it one interval at a
+  # time
   if (scalar(@{$self->interval_data})) {
     return shift @{$self->interval_data};
   }
 
+  # If the interval data is exhausted, try to extract more from the datastream
   do {
     $self->datastream->read($buf,$READ_SZ);
     $c .= $buf;
@@ -201,22 +211,27 @@ sub next {
       for (my $i = 0; $i < scalar(@subs); $i++) {
         $data = $subs[$i];
         # Break out timestamp, parse into DateTime object
-        ($dt_stamp) = $data =~ m/ ($self->dt_regex) /smx;
+        ($dt_stamp) = $data =~ m/ ($dt_regex) /smx;
         chomp $dt_stamp;
-        ($coredata = $data) =~ s/ $self->dt_regex //smx;
+        ($coredata = $data) =~ s/ $dt_regex //smx;
+        # Rip out the time zone so parse_datetime will accept the $dtstamp
+        $dt_stamp =~ s{\w+ \s+ (\d{4})$}{$1}x;
+        # Of course, some like pgstat are different (the time zone comes last)
+        $dt_stamp =~ s{(\d{4}) \s+ \w+$}{$1}x;
         my ($dt) = $strp->parse_datetime($dt_stamp);
         # TODO: Parse the individual data sections into something we can print
-        # out directly in any format
+        #       out directly in any format
         my ($data) = $self->_parse_interval($coredata);
         $data->{datetime} = $dt;
         push @{$self->interval_data}, $data;
       }
-      # Delete what we've parsed so far...
+      # Delete what we've parsed so far from our contents buffer...
       if ($self->datastream->eof) {
         $drops = $c =~ s{ $regex_eof }{}gsmx;
       } else {
         $drops = $c =~ s{ $regex }{}gsmx;
       }
+      # Update the record count
       $self->record_count($self->record_count + $drops);
     }
   } until (scalar(@{$self->interval_data}) or $self->datastream->eof);

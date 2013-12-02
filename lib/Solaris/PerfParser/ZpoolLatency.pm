@@ -144,7 +144,7 @@ sub reset {
 =head2 next
 
 Pull all the records for the next time interval off of the datastream and
-print them in the desired format, JSON by default
+store them in the object's interval_data attribute
 
 =cut
 

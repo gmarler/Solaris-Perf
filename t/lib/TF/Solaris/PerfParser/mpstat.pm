@@ -120,3 +120,12 @@ sub test_scan {
   ok($p->datastream->eof, "should be at EOF");
 }
 
+sub test_next {
+  my ($test, $report) = @_;
+
+  ok my $p = $test->class_name->new($test->constructor_args),
+    'Create a new instance';
+
+  my $data = $p->next();
+  my $data2 = $p->next();
+}
