@@ -5,7 +5,7 @@ use warnings;
 
 use parent 'DBIx::Class::Core';
 
-__PACKAGE__->load_components(qw(InflateColumn::DateTime));
+__PACKAGE__->load_components(qw(InflateColumn::DateTime Core));
 __PACKAGE__->table('interval');
 
 __PACKAGE__->add_columns(
