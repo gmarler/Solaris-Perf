@@ -39,12 +39,12 @@ sub _parse_interval {
   my (%mpstat_data);
 
   my $mpstat_regex =
-    qr{^ (?: \s+? ($<cpu>CPU) [^\n]+ \n |   # mpstat data headers
-             \s+? ($<cpu>\d+) \s+ ($<minf>\d+) \s+ ($<mjf>\d+) \s+
-             ($<xcal>\d+) \s+ ($<intr>\d+) \s+ ($<ithr>\d+) \s+
-             ($<csw>\d+) \s+ ($<icsw>\d+) \s+ ($<migr>\d+) \s+
-             ($<smtx>\d+) \s+ ($<srw>\d+) \s+ ($<syscl>\d+) \s+
-             ($<usr>\d+) \s+ ($<sys>\d+) \s+ ($<wt>\d+) \s+ ($<idl>\d+) [^\n]+? \n
+    qr{^ (?: \s+? (?<cpu>CPU) [^\n]+ \n |   # mpstat data headers
+             \s+? (?<cpu>\d+) \s+ (?<minf>\d+) \s+ (?<mjf>\d+) \s+
+             (?<xcal>\d+) \s+ (?<intr>\d+) \s+ (?<ithr>\d+) \s+
+             (?<csw>\d+) \s+ (?<icsw>\d+) \s+ (?<migr>\d+) \s+
+             (?<smtx>\d+) \s+ (?<srw>\d+) \s+ (?<syscl>\d+) \s+
+             (?<usr>\d+) \s+ (?<sys>\d+) \s+ (?<wt>\d+) \s+ (?<idl>\d+) \n
          )
       }smx;
 
@@ -54,7 +54,7 @@ sub _parse_interval {
     next if ($+{cpu} eq "CPU");
 
     push @{$mpstat_data{'cpu_data'}},
-         [ $+{'cpu','minf','mjf','xcal','intr','ithr','csw','icsw','migr',
+         [ @+{'cpu','minf','mjf','xcal','intr','ithr','csw','icsw','migr',
               'smtx','srw','syscl','usr','sys','wt','idl'} ];
   }
   return \%mpstat_data;
