@@ -27,6 +27,39 @@ sub _build_strptime_pattern {
   return "%A %B %d %T %Y";
 }
 
+=head2 _parse_interval
+
+Parse data for a single time interval
+
+=cut
+
+sub _parse_interval {
+  my ($self,$data) = @_;
+
+  my (%pgstat_data);
+
+  my $pgstat_regex =
+    qr{^ (?: \s+? (?<id>ID) [^\n]+ \n |   # pgstat data headers
+             \s+? (?<id>\d+) \s+
+             Core \s+ \( (?<core_resource>\w+) \) \s+
+             (?<hw>(?:-|\d|\.)+)%? \s+
+             (?<sw>(?:-|\d|\.)+)%? \s+
+             (?<cpus>\S+) \n \n?
+         )
+      }smx;
+
+  # We added 'g' here to get them all, one by one
+  while ($data =~ m{ $pgstat_regex }gsmx ) {
+    # Skip headers
+    next if ($+{id} eq "ID");
+
+    push @{$pgstat_data{'core_data'}},
+         [ @+{'id','core_resource','hw','sw','cpus'} ];
+  }
+  return \%pgstat_data;
+}
+
+
 __PACKAGE__->meta->make_immutable;
 
 1;
