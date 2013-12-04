@@ -5,7 +5,7 @@ use warnings;
 
 use parent 'DBIx::Class::Core';
 
-__PACKAGE__->load_components(qw(InflateColumn::DateTime));
+__PACKAGE__->load_components(qw(InflateColumn::DateTime Core));
 __PACKAGE__->table('hostinterval');
 
 __PACKAGE__->add_columns(
@@ -17,6 +17,11 @@ __PACKAGE__->add_columns(
   },
 );
 
+#
+# NOTE: Might want to make a separate primary key, rather
+#       than a composite one.  That way, we don't have to 
+#       store 2 id values in all rows that belong to each
+#       HostInterval.
 __PACKAGE__->set_primary_key('host_id','interval_id');
 
 

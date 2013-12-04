@@ -13,9 +13,14 @@ __PACKAGE__->add_columns(
     data_type         => 'integer',
     is_auto_increment => 1,
   },
-  interval => {
+  # Composite keys from HostInterval
+  host_id => {
     data_type         => 'integer',
   },
+  interval_id => {
+    data_type         => 'integer',
+  },
+  # Actual fields for this row type
   cpu => {
     data_type         => 'integer',
   },
@@ -55,5 +60,19 @@ __PACKAGE__->set_primary_key('id');
 #    ioaction =>
 #      'Solaris::Perf::Schema::Result::IOAction',
 #    );
+
+__PACKAGE__->belongs_to(
+  # Accessor
+  'host_interval',
+  # Related Class
+  'Solaris::Perf::Schema::Result::HostInterval',
+  # Our Foreign Key Column OR custom join expression
+  # We might want to make HostInterval have it's own unique PK, rather
+  # than a composite one
+  {
+    'foreign.host_id'     => 'self.host_id',
+    'foreign.interval_id' => 'self.interval_id'
+  }
+);
 
 1;
