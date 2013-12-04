@@ -85,15 +85,33 @@ sub test_populate_from_parse {
   ok my $host_id = Host->find_or_create({name => 'proteus'}) =>
     'Should find previously existing host proteus';
 
+  my $dtf = Schema->storage->datetime_parser;
+
   # Read and parse datastream
   while (my $interval_data = $p->next()) {
     # Grab the interval timestamp and insert it
     my $dt = $interval_data->{datetime};
-    my $interval_id = Interval->find_or_create({ start => $dt });
+    my $interval_result = Interval->find_or_create({ start => $dtf->format_datetime($dt) });
+    isa_ok($interval_result, "Solaris::Perf::Schema::Result::Interval",
+          'Should be a Result::Interval');
     # Validate the timestamp
-    # Insert the rows in the mpstat table
+    # Insert the rows for this interval in the mpstat table
+    # NOTE: $cd is short for $cpu_data
+    my $cd = $interval_data->{cpu_data};
+    foreach my $crow (@$cd) {
+      my $row = mpstat->create({
+          host_id => $host_id, interval_id => $interval_result->id,
+          cpu => $crow->[0], xcal => $crow->[3], usr => $crow->[12],
+          sys => $crow->[13], idl => $crow->[15],
+        }
+      );
+      isa_ok($row, "Solaris::Perf::Schema::Result::mpstat",
+             'Should be a Result::mpstat');
+    }
     # Validate them
   }
+
+  # Validate the count and range of timestamps that were inserted
 }
 
 1
