@@ -1,3 +1,6 @@
 *.swp
 .build
 /Solaris-Perf*
+# Rule out items from DBIx::Class::Migration
+share/solaris-perf-schema/*
+share/solaris-perf-schema.db
