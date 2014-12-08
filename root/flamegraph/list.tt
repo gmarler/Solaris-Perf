@@ -1,0 +1,37 @@
+[% # This is a TT comment. -%]
+ 
+[%- # Provide a title -%]
+[% META title = 'Flamegraph List' -%]
+ 
+[% # Note That the '-' at the beginning or end of TT code  -%]
+[% # "chomps" the whitespace/newline at that end of the    -%]
+[% # output (use View Source in browser to see the effect) -%]
+ 
+[% # Some basic HTML with a loop to display books -%]
+<table>
+<tr><th>Hostname</th><th>Inserted Into DB</th><th>Sample Begin</th><th>Sample End</th>
+    <th>Delete?</th>
+</tr>
+[% USE dtf = DateTime::Format('DateTime::Format::Strptime', { pattern => "%T %D" }) %]
+[% # Display each flamegraph in a table row %]
+[% FOREACH flamegraph IN flamegraphs -%]
+  <tr>
+    <td>[% flamegraph.host.name %]</td>
+    <td>[% USE creation = DateTime( from_object = flamegraph.creation ) %]
+        [% dtf.format( creation.set_time_zone( flamegraph.host.timezone ) ) %]
+    </td>
+    <td>[% USE begin = DateTime( from_object = flamegraph.begin ) %]
+        [% dtf.format( begin.set_time_zone( flamegraph.host.timezone ) ) %]
+    </td>
+    <td>[% USE end = DateTime( from_object = flamegraph.end ) %]
+        [% dtf.format( end.set_time_zone( flamegraph.host.timezone ) ) %]
+    </td>
+    <td>
+      [% # Add a link to delete a flamegraph %]
+      <a href="[%
+        c.uri_for(c.controller.action_for('delete'), [flamegraph.id]) %]">Delete</a>
+    </td>
+  </tr>
+[% END -%]
+</table>
+
