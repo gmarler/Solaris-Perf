@@ -1,4 +1,4 @@
-package Solaris::Perf::Controller::Root;
+package Solaris::Perf::Web::Controller::Root;
 use Moose;
 use namespace::autoclean;
 
@@ -12,7 +12,7 @@ __PACKAGE__->config(namespace => '');
 
 =head1 NAME
 
-Solaris::Perf::Controller::Root - Root Controller for Solaris::Perf
+Solaris::Perf::Web::Controller::Root - Root Controller for Solaris::Perf::Web
 
 =head1 DESCRIPTION
 
