@@ -4,17 +4,17 @@ use strict;
 use warnings;
 
 use Catalyst::ScriptRunner;
-Catalyst::ScriptRunner->run('Solaris::Perf', 'Create');
+Catalyst::ScriptRunner->run('Solaris::Perf::Web', 'Create');
 
 1;
 
 =head1 NAME
 
-solaris_perf_create.pl - Create a new Catalyst Component
+solaris_perf_web_create.pl - Create a new Catalyst Component
 
 =head1 SYNOPSIS
 
-solaris_perf_create.pl [options] model|view|controller name [helper] [options]
+solaris_perf_web_create.pl [options] model|view|controller name [helper] [options]
 
  Options:
    --force        don't create a .new file where a file to be created exists
@@ -22,14 +22,14 @@ solaris_perf_create.pl [options] model|view|controller name [helper] [options]
    --help         display this help and exits
 
  Examples:
-   solaris_perf_create.pl controller My::Controller
-   solaris_perf_create.pl --mechanize controller My::Controller
-   solaris_perf_create.pl view My::View
-   solaris_perf_create.pl view HTML TT
-   solaris_perf_create.pl model My::Model
-   solaris_perf_create.pl model SomeDB DBIC::Schema MyApp::Schema create=dynamic\
+   solaris_perf_web_create.pl controller My::Controller
+   solaris_perf_web_create.pl --mechanize controller My::Controller
+   solaris_perf_web_create.pl view My::View
+   solaris_perf_web_create.pl view HTML TT
+   solaris_perf_web_create.pl model My::Model
+   solaris_perf_web_create.pl model SomeDB DBIC::Schema MyApp::Schema create=dynamic\
    dbi:SQLite:/tmp/my.db
-   solaris_perf_create.pl model AnotherDB DBIC::Schema MyApp::Schema create=static\
+   solaris_perf_web_create.pl model AnotherDB DBIC::Schema MyApp::Schema create=static\
    [Loader opts like db_schema, naming] dbi:Pg:dbname=foo root 4321
    [connect_info opts like quote_char, name_sep]
 

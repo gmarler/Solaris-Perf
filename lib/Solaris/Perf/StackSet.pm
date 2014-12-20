@@ -43,20 +43,20 @@ sub collapseStack {
   my $nr = 0;
   my @stack;
 
-  foreach (<$fh>) {
+  while (my $line = $fh->getline) {
     next if $nr++ < $headerlines;
-    chomp;
+    chomp($line);
 
-    if (m/^\s*(\d+)+$/) {
+    if ($line =~ m/^\s*(\d+)+$/) {
       #$collapsed{join(";", @stack)} = $1;
       $self->addStack([@stack],$1);
       @stack = ();
       next;
     }
 
-    next if (m/^\s*$/);
+    next if ($line =~ m/^\s*$/);
 
-    my $frame = $_;
+    my $frame = $line;
     $frame =~ s/^\s*//;
     $frame =~ s/\+[^+]*$//;
     # Remove arguments from C++ function names.
@@ -104,7 +104,7 @@ sub eachStackByStack {
 # Create tree when asked
 #
 sub create_tree {
-  my ($self);
+  my ($self) = shift;
   my $tree;
 
   $self->eachStackByStack(\&create_subtree);
