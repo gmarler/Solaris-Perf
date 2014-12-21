@@ -8,20 +8,70 @@ use feature    qw( state );
 
 use Moose::Role;
 use namespace::autoclean;
-use IO::File                   qw();
-use DateTime::Format::Strptime qw();
-use DateTime::Set              qw();
-use DateTime::Span             qw();
-use Fcntl                      qw(SEEK_SET);
+use IO::File                     qw();
+use DateTime::Format::Strptime   qw();
+use DateTime::Set                qw();
+use DateTime::Span               qw();
+use Fcntl                        qw(SEEK_SET);
+use Moose::Util::TypeConstraints;
+use Solaris::DTF::Stats          qw();
 
 requires '_build_dt_regex';
 requires '_build_strptime_pattern';
 requires '_parse_interval';
 
+# Define these, so we can use them in type unions below as needed
+class_type 'IO::File';
+class_type 'IO::All::File';
+class_type 'IO::Uncompress::Bunzip2';
+
 has 'datastream' => ( is       => 'rw',
-                      isa      => 'IO::File',
+                      isa      => 'IO::File | IO::All::File | IO::Uncompress::Bunzip2',
                       required => 1,
                     );
+
+# TODO: POD document
+# If start/end are defined upon object construction, then we will seek
+# the datastream until we find them
+has 'start'          => ( is      => 'rw',
+                          isa     => 'Maybe[DateTime]',
+                          default => undef,
+                        );
+
+has 'end'            => ( is      => 'rw',
+                          isa     => 'Maybe[DateTime]',
+                          default => undef,
+                        );
+
+# Whether the two DateTimes above have been 'primed'; that is, whether
+# they have had the year/month/day copied from the file we're parsing
+# into these DateTimes.
+has 'dt_primed'      => ( is      => 'rw',
+                          isa     => 'Bool',
+                          default => 0,
+                        );
+
+# TODO: POD document!
+# If we need to collapse/coalesce the data, not necessarily keeping the
+# timestamps once we've extracted the data from the proper time frame, then
+# we'll need to set this to True.
+# This is handy for DTrace stack traces when creating Flame Graphs from them
+# after collapsing/coalescing them.
+has 'strip_datetime' => ( is      => 'ro',
+                          isa     => 'Bool',
+                          default => 0,
+                        );
+
+# TODO: POD document
+# This is something we'll set false if we don't want to further parse the
+# data, such as DTrace stack traces, which need no further parsing other
+# than collecting them from the right time range, then removing the
+# timestamps for subsequent collapsing.
+has 'interval_subparse' => ( is      => 'ro',
+                             isa     => 'Bool',
+                             default => 1,
+                           );
+
 
 has 'interval_data' => ( is      => 'rw',
                          isa     => 'ArrayRef[HashRef]',
@@ -43,22 +93,13 @@ has 'dt_regex' => (
   builder => '_build_dt_regex',
 );
 
-#                    default => sub {
-#                    qr{^
-#                        (?: \d{4} \s+     # year
-#                          (?:Jan|Feb|Mar|Apr|May|Jun|
-#                            Jul|Aug|Sep|Oct|Nov|Dec
-#                          ) \s+
-#                          \d+ \s+       # day of month
-#                          \d+:\d+:\d+   # HH:MM:DD  (24 hour clock)
-#                          \n
-#                        )
-#                      }smx;
-#                    },
-#                  );
+has 'datetime_parser' => (
+  is      => 'ro',
+  isa     => 'Object',
+  lazy    => 1,
+  builder => '_build_datetime_parser',
+);
 
-#has 'strptime_pattern' => ( is => 'ro', isa => 'Str',
-#                            default => "%A %B %d %T %z %Y" );
 has 'strptime_pattern' => (
   is      => 'ro',
   isa     => 'Str',
@@ -109,11 +150,7 @@ sub scan {
   my ($regex_eof) = $self->regex_eof;
   my ($READ_SZ)   = $self->read_chunk;
 
-  my $strp = DateTime::Format::Strptime->new(
-    pattern   => $self->strptime_pattern,
-    time_zone => 'floating',
-    on_error  => 'croak',
-  );
+  my $datetime_parser = $self->datetime_parser;
 
   my $i = 0;
   while ($self->datastream->read($buf,$READ_SZ)) {
@@ -139,7 +176,7 @@ sub scan {
         $dt_stamp =~ s{\w+ \s+ (\d{4})$}{$1}x;
         # Of course, some like pgstat are different (the time zone comes last)
         $dt_stamp =~ s{(\d{4}) \s+ \w+$}{$1}x;
-        my ($dt) = $strp->parse_datetime($dt_stamp);
+        my ($dt) = Solaris::DTF::Stats->parse_datetime($dt_stamp);
         # TODO: Find a way to store the $coredata we need to examine eventually
         # push @{$dt_aref} = $dt;
       }
@@ -164,32 +201,40 @@ sub reset {
 =head2 next
 
 Pull all the records for the next time interval off of the datastream and
-store them in the object's interval_data attribute
+store them in the object's interval_data attribute.
+
+if start and end DateTime's are defined, then make sure we're in the range
+specified before returning anything.
 
 =cut
 
 sub next {
   my ($self) = shift;
-
   my ($buf);
+
   # Use a static/stateful variable, as between calls it's likely that you'll
   # have partially consumed/parsed data that you've read from the datastream
   state $c = '';
+
   my ($dt_regex)  = $self->dt_regex;
   my ($regex)     = $self->regex;
   my ($regex_eof) = $self->regex_eof;
   my ($READ_SZ)   = $self->read_chunk;
-
-  my $strp = DateTime::Format::Strptime->new(
-    pattern   => $self->strptime_pattern,
-    #pattern   => '%A,%t%B%t%d,%t%Y%t%I:%M:%S%t%p',
-    time_zone => 'floating',
-    on_error  => 'croak',
-  );
+  # when we first pull these, they're only times, no year/month/day - we need
+  # to populate them from the first datetime we read out of the file
+  my ($start_dt)  = $self->start;
+  my ($end_dt)    = $self->end;
+  # Set to show you've primed the DateTimes from the file we're parsing
+  my ($dt_primed) = $self->dt_primed;
+  # If a time range has been specified, whether we've exhausted the range of
+  # times of interest
+  my ($time_range_exhausted);
 
   # If we have already parsed data, return it one interval at a
   # time
-  if (scalar(@{$self->interval_data})) {
+  # CONSTRAINT: When start_dt/end_dt defined, any data already parsed and ready
+  #             for reading should be within the specified range
+  if (scalar(@{$self->interval_data}) and (not $time_range_exhausted)) {
     return shift @{$self->interval_data};
   }
 
@@ -218,12 +263,43 @@ sub next {
         $dt_stamp =~ s{\w+ \s+ (\d{4})$}{$1}x;
         # Of course, some like pgstat are different (the time zone comes last)
         $dt_stamp =~ s{(\d{4}) \s+ \w+$}{$1}x;
-        my ($dt) = $strp->parse_datetime($dt_stamp);
+        my ($dt) = Solaris::DTF::Stats->parse_datetime($dt_stamp);
+
+        # Only do this if the begin/end timestamps have been defined
+        if (defined($start_dt) and defined($end_dt)) {
+          unless ($dt_primed) {
+            my ($year,$month,$day) = ($dt->year, $dt->month, $dt->day);
+
+            $start_dt = DateTime->new( year => $year, month => $month, day => $day );
+            $end_dt   = DateTime->new( year => $year, month => $month, day => $day );
+
+            $self->start($start_dt);   $self->end($end_dt);
+            $dt_primed = $self->dt_primed(1);
+          }
+        }
+
+        # Exit the loop here if we've passed the end of the interesting time range
+        if (defined($end_dt) and ($dt > $end_dt)) {
+          $time_range_exhausted++;
+          last;
+        }
         # TODO: Parse the individual data sections into something we can print
         #       out directly in any format
-        my ($data) = $self->_parse_interval($coredata);
-        $data->{datetime} = $dt;
-        push @{$self->interval_data}, $data;
+        my $data;
+        if ($self->interval_subparse) {
+          $data = $self->_parse_interval($coredata);
+          $data->{datetime} = $dt;
+        } else {
+          $data = $coredata;
+        }
+        # Handle whether we're looking for a specific range or not
+        if ($start_dt and $end_dt) {
+          if (($start_dt <= $dt) and ($dt <= $end_dt)) {
+            push @{$self->interval_data}, $data;
+          }
+        } else {
+          push @{$self->interval_data}, $data;
+        }
       }
       # Delete what we've parsed so far from our contents buffer...
       if ($self->datastream->eof) {
@@ -234,17 +310,18 @@ sub next {
       # Update the record count
       $self->record_count($self->record_count + $drops);
     }
-  } until (scalar(@{$self->interval_data}) or $self->datastream->eof);
+  } until (scalar(@{$self->interval_data}) or $self->datastream->eof or
+           $time_range_exhausted);
 
-  if ( scalar(@{$self->interval_data}) ) {
+  if ( (not $time_range_exhausted) and scalar(@{$self->interval_data}) ) {
     return shift @{$self->interval_data};
   } else {
     return;  # undef
   }
 }
 
-
 # This doesn't seem to work for Roles
 # __PACKAGE__->meta->make_immutable;
 
 1;
+
