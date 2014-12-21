@@ -1,34 +1,39 @@
 package Solaris::Perf::Schema::Result::vmstat;
 
-use strict;
-use warnings;
+# VERSION
 
-use base qw/DBIx::Class::Core/;
+use Solaris::Perf::Schema::Candy
+  -components => ['InflateColumn::DateTime'];
 
-__PACKAGE__->load_components(qw/InflateColumn::DateTime/);
+primary_column vmstat_id => {
+  data_type           => 'int',
+  is_auto_increment   => 1,
+};
 
-__PACKAGE__->table('vmstat');
+column host_fk   => {
+  data_type           => 'int',
+};
 
-__PACKAGE__->add_columns(
-  'vmstat_id' => {
-    data_type   => 'integer',
-  },
-  'timestamp' => {
-    data_type   => 'datetime',
-    is_nullable => 0,
-  },
-  # CPU
-  'cpu_user' => {
-    data_type   => 'smallint',
-  },
-  'cpu_sys' => {
-    data_type   => 'smallint',
-  },
-  'cpu_idle' => {
-    data_type   => 'smallint',
-  },
-);
+column timestamp => {
+  data_type           => 'datetime',
+  time_zone           => 'UTC',
+};
 
-__PACKAGE__->set_primary_key('vmstat_id');
+column free_list => {
+  data_type           => 'int',
+};
+
+column scan_rate => {
+  data_type           => 'int',
+};
+
+column idle => {
+  data_type           => 'int',
+};
+
+
+belongs_to host => 'Solaris::Perf::Schema::Result::Host',
+                   {'foreign.host_id'=>'self.host_fk'};
 
 1;
+
