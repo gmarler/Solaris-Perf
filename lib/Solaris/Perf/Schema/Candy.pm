@@ -4,6 +4,8 @@ use 5.18.1;
 
 use warnings;
 
+# VERSION
+
 use parent 'DBIx::Class::Candy';
 
 sub base { 'Solaris::Perf::Schema::Result' }
