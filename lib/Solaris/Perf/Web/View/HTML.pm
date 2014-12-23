@@ -1,4 +1,4 @@
-package Solaris::Perf::View::HTML;
+package Solaris::Perf::Web::View::HTML;
 use Moose;
 use namespace::autoclean;
 
@@ -11,15 +11,15 @@ __PACKAGE__->config(
 
 =head1 NAME
 
-Solaris::Perf::View::HTML - TT View for Solaris::Perf
+Solaris::Perf::Web::View::HTML - TT View for Solaris::Perf::Web
 
 =head1 DESCRIPTION
 
-TT View for Solaris::Perf.
+TT View for Solaris::Perf::Web.
 
 =head1 SEE ALSO
 
-L<Solaris::Perf>
+L<Solaris::Perf::Web>
 
 =head1 AUTHOR
 
