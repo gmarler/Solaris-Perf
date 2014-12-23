@@ -1,0 +1,174 @@
+#!/usr/perl5/5.18.1/bin/perl
+
+# VERSION
+
+use feature ':5.18';
+use strict;
+use warnings;
+
+use feature qw(say);
+
+use IO::File                   qw();
+use DateTime                   qw();
+use Getopt::Long               qw();
+use Fcntl                      qw(SEEK_SET);
+use File::Temp                 qw( :seekable );
+use DateTime                   qw();
+use DateTime::TimeZone         qw();
+use DateTime::Format::Strptime qw();
+use LWP::UserAgent             qw();
+use HTTP::Request::Common      qw( POST PUT );
+use FindBin                    qw();
+use URI::Escape                qw();
+use IO::Uncompress::Bunzip2    qw();
+use File::MMagic               qw();
+use Carp                       qw(croak);
+use Solaris::DTF::Stats        qw();
+
+use lib "$FindBin::Bin/../lib";
+# use Perf::Schema qw();
+
+use vars qw($HAS_PROGRESS_BAR);
+
+BEGIN {
+  eval {
+    require Term::ProgressBar;
+    $HAS_PROGRESS_BAR = 1;
+  };
+}
+
+#
+# Open specified dispqlen trace file, and extract data in between datetime stamp 1
+# and 2.
+#
+# Submit the resulting file up to the REST server for processing via PUT
+#
+
+my $file;
+my ($start,$end,$hostname,$start_dt,$end_dt,$description,$port);
+
+Getopt::Long::GetOptions(
+  'file=s'       => \$file,
+  'start=s'      => \$start,
+  'end=s'        => \$end,
+  'hostname=s'   => \$hostname,
+  'desc=s'       => \$description,
+  'port=s'       => \$port,
+) or die <<USAGE_END;
+
+USAGE: $0 [options]\n
+    --file  <file>          # File containing stack trace
+    --start [ HH:MM:SS ]    # Starting timestamp
+    --end   [ HH:MM:SS ]    # Ending   timestamp
+  [ --hostname <hostname> ] # Hostname override
+  [ --desc "description"  ] # Description, which will be used for ...
+  [ --port         <port> ] # Port on destination web server
+USAGE_END
+
+my $tzname = DateTime::TimeZone->new( name => 'local' )->name;
+$hostname = $hostname ||= qx{/bin/hostname};
+chomp($hostname);
+
+say "Collecting kernel stack trace for $hostname, in [$tzname] time zone";
+
+#
+# NOTE: We're presuming that we're parsing the log in question on the same
+#       machine where that log was created.  Thus we're using the local time
+#       zone here, so we can reliably convert to UTC and back later as we
+#       store the data in a database.
+$start_dt =
+  Solaris::DTF::Stats->parse_datetime($start)->set_time_zone($tzname);
+$end_dt   =
+  Solaris::DTF::Stats->parse_datetime($end)->set_time_zone($tzname);
+
+my $fh   = IO::File->new($file, "<") or die "Unable to open $file: $!";
+my $mm   = File::MMagic->new();
+my $mime_type = $mm->checktype_filehandle($fh);
+
+# Handle bzip2 compressed files
+if ($mime_type eq 'application/x-bzip2') {
+  $fh = IO::Uncompress::Bunzip2->new($file) or
+    croak "Unable top open bzip2 file: $file";
+}
+
+my $p = Solaris::PerfParser::DTraceDate->new(
+          datastream => $fh, interval_subparse => 0, strip_datetime => 1,
+          start => $start_dt, end => $end_dt,
+        );
+
+my $tfh = File::Temp->new() or croak("Unable to open temporary file");
+
+while (my $d = $p->next) {
+  $tfh->print($d);
+}
+
+# While operational, the Solaris::PerfParser::DTraceDate object has properly
+# filled in the date for the start/end times we plucked out, so extract them.
+$start_dt = $p->start;
+$end_dt   = $p->end;
+
+# Seek to beginning of file to allow sending it somewhere
+$tfh->seek( 0, SEEK_SET );
+
+http_upload($tfh->filename,$hostname,$start_dt->epoch,$end_dt->epoch,$tzname,$port);
+
+exit 0;
+
+sub http_upload {
+  my ($filename,$hostname,$begin_epoch,$end_epoch,$tz,$port) = @_;
+
+  $HTTP::Request::Common::DYNAMIC_FILE_UPLOAD = 1;
+
+  my ($ua) = LWP::UserAgent->new;
+  
+  my $server = 'nydevsol10.dev.bloomberg.com';
+  $port   = $port || 3000;
+  $tz = URI::Escape::uri_escape($tz);
+  my $req = POST "http://$server:$port/flamegraph/upload_stack/$hostname/$begin_epoch/$end_epoch/$tz",
+    Content_Type => 'form-data',
+    Content      => {
+      "upload" => [ $filename ],
+    };
+#    ':read_size_hint' => 131072,
+
+  my $file_size = $req->header('Content_Length');
+  print "Starting Upload of file size $file_size...\n";
+
+  my $reader = &create_content_reader($req->content(),
+                                      $req->header('Content_Length'));
+  $req->content($reader);
+
+  my $resp = $ua->request($req);
+  die "error while uploading $filename: ", $resp->message if $resp->is_error;
+
+  say "\n\nPlease point your browser at this URL:\n" . $resp->content . "\n";
+
+  sub create_content_reader {
+    my $gen = shift;
+    my $len = shift;
+
+    if ($HAS_PROGRESS_BAR) {
+      my $progress = Term::ProgressBar->new({ name => "Upload", count => $len,
+          term_width => 80 });
+
+      $progress->minor(0);
+
+      my $size = 0;
+      my $next_update = 0;
+
+      return sub {
+        my $chunk = $gen->();
+        $size += length($chunk) if $chunk;
+        $next_update = $progress->update($size) if $size >= $next_update;
+        return $chunk;
+      }
+    } else {
+      return sub {
+        return $gen->();
+      }
+    }
+  }
+
+}
+
+
