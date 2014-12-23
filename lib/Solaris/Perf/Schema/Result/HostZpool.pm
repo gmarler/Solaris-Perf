@@ -20,23 +20,24 @@ __PACKAGE__->add_columns(
 __PACKAGE__->set_primary_key('host_id', 'zpool_id');
 
 
-__PACKAGE__->belongs_to(
-  # Accessor
-  'host',
-  # Related Class
-  'Solaris::Perf::Schema::Result::Host',
-  # Relationship
-  { 'foreign.id' => 'self.host_id' }
-);
-
-__PACKAGE__->belongs_to(
-  # Accessor
-  'zpool',
-  # Related Class
-  'Solaris::Perf::Schema::Result::Zpool',
-  # Relationship
-  { 'foreign.id' => 'self.zpool_id' }
-);
+# __PACKAGE__->belongs_to(
+#   # Accessor
+#   'host',
+#   # Related Class
+#   'Solaris::Perf::Schema::Result::Host',
+#   # Relationship
+#   { 'foreign.id' => 'self.host_id' }
+# );
+# 
+# __PACKAGE__->belongs_to(
+#   # Accessor
+#   'zpool',
+#   # Related Class
+#   'Solaris::Perf::Schema::Result::Zpool',
+#   # Relationship
+#   { 'foreign.id' => 'self.zpool_id' }
+# );
 
 
 1;
+

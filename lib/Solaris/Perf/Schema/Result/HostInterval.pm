@@ -1,7 +1,6 @@
 package Solaris::Perf::Schema::Result::HostInterval;
 
-use strict;
-use warnings;
+# VERSION
 
 use parent 'DBIx::Class::Core';
 
@@ -25,23 +24,37 @@ __PACKAGE__->add_columns(
 __PACKAGE__->set_primary_key('host_id','interval_id');
 
 
-__PACKAGE__->belongs_to(
-  # Accessor
-  'host',
-  # Related Class
-  'Solaris::Perf::Schema::Result::Host',
-  # Relationship
-  'host_id'
-);
-
-__PACKAGE__->belongs_to(
-  # Accessor
-  'interval',
-  # Related Class
-  'Solaris::Perf::Schema::Result::Interval',
-  # Relationship
-  'interval_id'
-);
+# __PACKAGE__->belongs_to(
+#   # Accessor
+#   'host',
+#   # Related Class
+#   'Solaris::Perf::Schema::Result::Host',
+#   # Relationship
+#   'host_id'
+# );
+# 
+# __PACKAGE__->belongs_to(
+#   # Accessor
+#   'interval',
+#   # Related Class
+#   'Solaris::Perf::Schema::Result::Interval',
+#   # Relationship
+#   'interval_id'
+# );
+# 
+# __PACKAGE__->has_many(
+#   # Name of accessor
+#   'mpstats',
+#   # Related Class
+#   'Solaris::Perf::Schema::Result::mpstat',
+#   # Relationship
+#   { 'foreign.interval_id' => 'self.interval_id',
+#     'foreign.host_id'     => 'self.host_id' },
+#   # Attributes
+#   # TODO: We may need to eliminate the below later...
+#   # { cascade_delete => 0 }
+# );
 
 
 1;
+
