@@ -23,4 +23,15 @@ sub search_host_YMDH {
   );
 }
 
+sub search_host_dates {
+  $_[0]->search(
+    { $_[0]->me . 'host_fk' => $_[1] },
+    { columns   => [
+        { date => { distinct => \"DATE( me.timestamp )" } },
+      ],
+      order_by  => [ 'me.timestamp' ],
+    }
+  );
+}
+
 1;

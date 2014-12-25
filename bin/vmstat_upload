@@ -75,7 +75,9 @@ sub import {
   # my $fh   = IO::File->new($file, "<") or die "Unable to open $file: $!";
   # my $mm   = File::MMagic->new();
   # my $mime_type = $mm->checktype_filehandle($fh);
-  my $mime_type = $io->mimetype;
+  # mimetype will be 'undef' for plain types
+  my $mime_type = defined($io->mimetype) ? $io->mimetype :
+                                           "";
 
   # Handle bzip2 compressed files
   if ($mime_type eq 'application/x-bzip') {

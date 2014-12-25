@@ -103,6 +103,7 @@ sub svc_host_time_YMDH : PathPart('host') Chained('svc_vmstat') Args(1) {
 #                             ]
 #                           }
 #                          );
+  my $date_rs = $vmstat_rs->search_host_dates( $host_id );
   my $year_rs = $vmstat_rs->search_host_YMDH( $host_id );
 
   my $month_rs = $vmstat_rs
@@ -134,10 +135,17 @@ sub svc_host_time_YMDH : PathPart('host') Chained('svc_vmstat') Args(1) {
   
   $DB::single = 1;
 
-  my $vmstat_host_year  = [ ];
-  my $vmstat_host_month = [ ];
-  my $vmstat_host_day   = [ ];
-  my $vmstat_host_hour  = [ ];
+  my $vmstat_host_dates  = [ ];
+  my $vmstat_host_year   = [ ];
+  my $vmstat_host_month  = [ ];
+  my $vmstat_host_day    = [ ];
+  my $vmstat_host_hour   = [ ];
+
+  while (my $result = $date_rs->next) {
+    # NOTE: must use get_column here, as there will be no accessor
+    #       created
+    push @$vmstat_host_dates, $result->get_column('date');
+  }
 
   while (my $result = $year_rs->next) {
     # NOTE: must use get_column here, as there will be no accessor
@@ -164,6 +172,7 @@ sub svc_host_time_YMDH : PathPart('host') Chained('svc_vmstat') Args(1) {
     push @$vmstat_host_hour, $result->get_column('hour');
   }
 
+  $c->stash( json_dates  => $vmstat_host_dates );
   $c->stash( json_years  => $vmstat_host_year  );
   $c->stash( json_months => $vmstat_host_month );
   $c->stash( json_days   => $vmstat_host_day   );
