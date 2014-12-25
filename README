@@ -1,0 +1,30 @@
+#
+# Development server startup, with DBIC debugging:
+#
+
+# Plack:
+DBIC_TRACE=1 CATALYST_CONFIG_LOCAL_SUFFIX=dev \
+  plackup -r -I./lib ./solaris_perf_web.psgi
+
+# With Perl Debugger:
+DBIC_TRACE=1 CATALYST_CONFIG_LOCAL_SUFFIX=dev \
+  perl -I./lib -d script/solaris_perf_web_server.pl -p 5000
+
+
+#
+# DBIx::Class::Migration Deployment Configs
+#
+
+# Dev:
+# 
+CATALYST_CONFIG_LOCAL_SUFFIX=dev \
+  perl -I./lib lib/Solaris/Perf/Schema/MigrationScript.pm <command>
+
+# Test:
+#
+CATALYST_CONFIG_LOCAL_SUFFIX=test \
+  perl -I./lib lib/Solaris/Perf/Schema/MigrationScript.pm <command>
+
+# "Prod":
+#
+perl -I./lib lib/Solaris/Perf/Schema/MigrationScript.pm <command>
