@@ -1,0 +1,31 @@
+[% # This is a TT comment. -%]
+ 
+[%- # Provide a title -%]
+[% META title = 'vmstat List' -%]
+ 
+[% # Note That the '-' at the beginning or end of TT code  -%]
+[% # "chomps" the whitespace/newline at that end of the    -%]
+[% # output (use View Source in browser to see the effect) -%]
+ 
+[% # Some basic HTML with a loop to display books -%]
+<table>
+<tr><th>Hostname</th><th>Sample Begin</th><th>Sample End</th><th>Delete?</th></tr>
+[% USE dtf = DateTime::Format('DateTime::Format::Strptime', { pattern => "%T %D" }) %]
+[% # Display each vmstat in a table row %]
+[% FOREACH vmstat IN vmstats -%]
+  <tr>
+    <td>[% vmstat.host.name %]</td>
+    <td>[% USE begin = DateTime( from_object = vmstat.begin ) %]
+        [% dtf.format( begin.set_time_zone( vmstat.host.timezone ) ) %]
+    </td>
+    <td>[% USE end = DateTime( from_object = vmstat.end ) %]
+        [% dtf.format( end.set_time_zone( vmstat.host.timezone ) ) %]
+    </td>
+    <td>
+      [% # Add a link to delete a vmstat %]
+      <a href="[%
+        c.uri_for(c.controller.action_for('delete'), [vmstat.id]) %]">Delete</a>
+    </td>
+  </tr>
+[% END -%]
+</table>
