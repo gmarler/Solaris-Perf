@@ -5,7 +5,7 @@ BEGIN {
 }
 
 use Catalyst::ScriptRunner;
-Catalyst::ScriptRunner->run('Solaris::Perf', 'Server');
+Catalyst::ScriptRunner->run('Solaris::Perf::Web', 'Server');
 
 1;
 
