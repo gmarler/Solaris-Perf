@@ -16,6 +16,10 @@
     },
   },
 
+  'View::JSON' => {
+    expose_stash         => qr/^json_/,
+  },
+
   'psgi_middleware', [
     'Debug' => {
       panels => [
