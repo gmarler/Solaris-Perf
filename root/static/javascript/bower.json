@@ -9,7 +9,7 @@
   "private": true,
   "dependencies": {
     "angular-bootstrap-datetimepicker": "latest"
-  }
+  },
   "ignore": [
     "**/.*",
     "node_modules",
