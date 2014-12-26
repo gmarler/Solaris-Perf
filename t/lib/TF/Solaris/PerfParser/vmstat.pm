@@ -84,6 +84,31 @@ sub test_next {
   cmp_ok($sample_count, '==', 4, 'Parsed 4 data samples');
 }
 
+
+sub test_times_parse_identical {
+  my $test = shift;
+
+  # 1, 30, 90 secs, 5, 10, 15, 30 mins, 1 hour
+  my @samples = qw( 1 30 60 90 300 600 900 1800 3600 );
+
+  foreach my $samples ( @samples ) {
+    my $data_file = $test->generate_vmstat_identical( $samples );
+
+    my $datastream = IO::File->new($data_file,"<");
+    ok my $p = $test->class_name->new(
+         datastream => $datastream,
+       ),
+    "Create a new instance for $samples second's worth of data";
+
+    my ($data,$sample_count);
+    while ($data = $p->next()) {
+      $sample_count++;
+    }
+
+    cmp_ok($sample_count, '==', $samples, "Parsed $samples data samples");
+  }
+}
+
 sub generate_base_dt {
   my ($self) = @_;
 
@@ -100,7 +125,7 @@ sub generate_base_dt {
   return $dt_base;
 }
 
-# These utility functions return a temporary IO:All handle where
+# These utility functions return a temporary File::Temp handle where
 # the requested generated data to parse has been stored, for whatever
 # amount of time has been requested
 sub generate_vmstat_identical {
@@ -108,7 +133,7 @@ sub generate_vmstat_identical {
 
   my $temp_file = File::Temp->new();
 
-  diag "Temporary file is: " . $temp_file->filename; 
+  # diag "Temporary file is: " . $temp_file->filename; 
 
   my $dt_base = $self->generate_base_dt();
   my $dt_iter = $dt_base->clone;
