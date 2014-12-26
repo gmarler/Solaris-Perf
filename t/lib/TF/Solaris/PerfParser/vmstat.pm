@@ -6,6 +6,7 @@ with 'Test::Class::Moose::Role::AutoUse';
 
 use Data::Dumper;
 use DateTime;
+use File::Temp;
 
 # Set up for schema
 #BEGIN { use Solaris::Perf::Schema; }
@@ -105,22 +106,29 @@ sub generate_base_dt {
 sub generate_vmstat_identical {
   my ($self,$secs_to_gen) = @_;
 
+  my $temp_file = File::Temp->new();
+
+  diag "Temporary file is: " . $temp_file->filename; 
+
   my $dt_base = $self->generate_base_dt();
   my $dt_iter = $dt_base->clone;
 
   while ($secs_to_gen--) {
-    say $dt_iter->epoch;
+    $temp_file->print( $dt_iter->epoch  . "\n");
     if ((($secs_to_gen + 1) % 10) == 0) {
-      say $periodic_header;
+      $temp_file->print( $periodic_header . "\n" );
     }
     my $data = sprintf(" %1lu %1lu %1lu %6u %5u %3.0f %3.0f %2.0f %2.0f" .
                        " %2.0f %2ld %2.0f %2d %2d %2d %2d %4.0f %4.0f" .
                        " %4.0f %2.0f %2.0f %2.0f",
                        3,0,0,1216860,627656,0,115,0,0,0,0,0,0,0,0,0,
                        8087,106896,10555,2,3,94);
-    say $data;
+    $temp_file->print( $data . "\n");
     $dt_iter->add( seconds => 1);
   }
+  $temp_file->flush();
+
+  return $temp_file;
 }
 
 sub generate_vmstat_random {
