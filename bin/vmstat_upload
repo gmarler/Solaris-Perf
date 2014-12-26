@@ -71,7 +71,9 @@ sub import {
       Solaris::DTF::Stats->parse_datetime($self->end)->set_time_zone($tzname);
   }
 
-  my $io   = IO::All->new($file)->tie;
+  # Disable autoclose on IO:All, since we may need to keep the file open
+  # till the bitter end.
+  my $io   = IO::All->new($file)->autoclose(0)->tie;
   # my $fh   = IO::File->new($file, "<") or die "Unable to open $file: $!";
   # my $mm   = File::MMagic->new();
   # my $mime_type = $mm->checktype_filehandle($fh);
