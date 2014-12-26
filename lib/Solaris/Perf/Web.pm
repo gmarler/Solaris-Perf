@@ -37,20 +37,16 @@ extends 'Catalyst';
 
 __PACKAGE__->config(
   name => 'Solaris::Perf::Web',
-  default_view => 'HTML',
+
   # Disable deprecated behavior needed by old applications
   disable_component_resolution_regex_fallback => 1,
+
   enable_catalyst_header => 1, # Send X-Catalyst header
-  'psgi_middleware', [
-    'Debug' => {
-      panels => [ 'Memory',
-                  'Timer',
-                  'CatalystLog',
-                  'CatalystStash',
-                  'DBIC::QueryLog',
-                ]
-    },
-  ],
+
+  # NOTE:
+  # For all other configuration, see the appropriate file at the
+  # top level directory, named:
+  # solaris_perf_web${CATALYST_CONFIG_LOCAL_SUFFIX}.pl
 );
 
 # Start the application
