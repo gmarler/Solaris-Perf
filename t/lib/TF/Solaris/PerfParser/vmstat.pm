@@ -99,6 +99,9 @@ sub generate_base_dt {
   return $dt_base;
 }
 
+# These utility functions return a temporary IO:All handle where
+# the requested generated data to parse has been stored, for whatever
+# amount of time has been requested
 sub generate_vmstat_identical {
   my ($self,$secs_to_gen) = @_;
 
