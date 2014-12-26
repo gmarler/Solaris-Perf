@@ -20,9 +20,10 @@
 <div id="menu">
     Navigation:
     <ul>
-        <li><a href="[% c.uri_for('/flamegraph/list') %]">Home</a></li>
         <li><a href="[% c.uri_for('/')
             %]" title="Performance Analysis Welcome Page">Welcome</a></li>
+        <li><a href="[% c.uri_for('/flamegraph/list') %]">Flamegraphs</a></li>
+        <li><a href="[% c.uri_for('/vmstat') %]">vmstat</a></li>
     </ul>
 </div><!-- end menu -->
  

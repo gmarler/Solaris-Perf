@@ -20,15 +20,19 @@ td {
 #menu {
     font-weight: bold;
     background-color: #ddd;
+    width: 150px;
+    float: left;
+    margin: 0;
+    padding: 0 0 50% 5px;
 }
 #menu ul {
     list-style: none;
     float: left;
     margin: 0;
-    padding: 0 0 50% 5px;
+    padding: 0 0 50% 0;
     font-weight: normal;
     background-color: #ddd;
-    width: 100px;
+    width: 150px;
 }
 #content {
     margin-left: 120px;
