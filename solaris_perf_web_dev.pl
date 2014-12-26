@@ -20,6 +20,12 @@
     expose_stash         => qr/^json_/,
   },
 
+  # We do this so we can still serve HTML files directly (we leave html
+  # out of the list below)
+  'Plugin::Static::Simple' => {
+    ignore_extensions => [ qw/tmpl tt tt2 xhtml/ ],
+  },
+
   'psgi_middleware', [
     'Debug' => {
       panels => [

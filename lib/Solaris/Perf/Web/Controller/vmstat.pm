@@ -187,9 +187,10 @@ sub svc_host_time_YMDH : PathPart('host') Chained('svc_vmstat') Args(1) {
 =cut
 
 sub index :Path :Args(0) {
-    my ( $self, $c ) = @_;
+  my ( $self, $c ) = @_;
 
-    $c->response->body('Matched Solaris::Perf::Web::Controller::vmstat in vmstat.');
+  #$c->response->body('Matched Solaris::Perf::Web::Controller::vmstat in vmstat.');
+  $c->serve_static_file( $c->uri_for('/vmstat/index.html') );
 }
 
 
