@@ -438,7 +438,6 @@ BEGIN {
 
 my $file;
 my ($start,$end,$hostname,$time_zone,$start_dt,$end_dt,$description,$port);
-#my $file = "/perfwork/P569-prof-SYS-197Hz-hotcpu.out-20141106-1400";
 
 Getopt::Long::GetOptions(
   'file=s'       => \$file,
