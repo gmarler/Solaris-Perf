@@ -43,5 +43,3 @@ belongs_to host => 'Solaris::Perf::Schema::Result::Host',
                    {'foreign.host_id'=>'self.host_fk'};
 
 1;
-
-
