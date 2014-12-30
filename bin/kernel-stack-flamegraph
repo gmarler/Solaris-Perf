@@ -437,7 +437,8 @@ BEGIN {
 #
 
 my $file;
-my ($start,$end,$hostname,$time_zone,$start_dt,$end_dt,$description,$port);
+my ($start,$end,$hostname,$time_zone,$start_dt,$end_dt,$description,
+    $server,$port);
 
 Getopt::Long::GetOptions(
   'file=s'       => \$file,
@@ -447,6 +448,7 @@ Getopt::Long::GetOptions(
   'time_zone=s'  => \$time_zone,
   'desc=s'       => \$description,
   'port=s'       => \$port,
+  'server=s'     => \$server,
 ) or die <<USAGE_END;
 
 USAGE: $0 [options]\n
@@ -456,6 +458,7 @@ USAGE: $0 [options]\n
   [ --hostname <hostname> ] # Hostname override
   [ --time_zone 'TZname' ]  # Time Zone override
   [ --desc "description"  ] # Description, which will be used in flamegraph title
+  [ --server     <server> ] # Destination web server
   [ --port         <port> ] # Port on destination web server
 USAGE_END
 
@@ -512,18 +515,19 @@ $end_dt   = $p->end;
 # Seek to beginning of file to allow sending it somewhere
 $tfh->seek( 0, SEEK_SET );
 
-http_upload($tfh->filename,$hostname,$start_dt->epoch,$end_dt->epoch,$tzname,$port,$description);
+http_upload($tfh->filename,$hostname,$start_dt->epoch,$end_dt->epoch,
+            $tzname,$server,$port,$description);
 
 exit 0;
 
 sub http_upload {
-  my ($filename,$hostname,$begin_epoch,$end_epoch,$tz,$port,$description) = @_;
+  my ($filename,$hostname,$begin_epoch,$end_epoch,$tz,$server,$port,$description) = @_;
 
   $HTTP::Request::Common::DYNAMIC_FILE_UPLOAD = 1;
 
   my ($ua) = LWP::UserAgent->new;
   
-  my $server = 'nydevsol10.dev.bloomberg.com';
+  $server = $server || 'localhost';
   $port   = $port || 3000;
   $tz = URI::Escape::uri_escape($tz);
   my $req = POST "http://$server:$port/flamegraph/upload_stack/$hostname/$begin_epoch/$end_epoch/$tz",
