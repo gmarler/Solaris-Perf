@@ -5,7 +5,7 @@
 <head>
 <title>[% template.title or "Performance Analysis Visualization App" %]</title>
     <link rel="stylesheet" href="[% c.uri_for('/static/css/main.css') %]" />
-    <script src="[% c.uri_for('/static/javascript/bower_components/bootstrap/dist/js/boostrap.min.js') %]"></script>
+    <script src="[% c.uri_for('/static/javascript/bower_components/bootstrap/dist/js/bootstrap.min.js') %]"></script>
     <script src="[% c.uri_for('/static/javascript/node_modules/lodash/dist/lodash.min.js') %]"></script>
     <script src="[% c.uri_for('/static/javascript/node_modules/angular/angular.min.js') %]"></script>
     <script src="[% c.uri_for('/static/javascript/app/app.js') %]"></script>
