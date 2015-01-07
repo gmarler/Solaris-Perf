@@ -11,20 +11,52 @@ var barcodeChart = function() {
     selection.each(function (data) {
       // Bind the dataset to the svg selection.
       var div = d3.select(this),
-        svg = div.selectAll('svg').data([data]);
+          svg = div.selectAll('svg').data([data]);
 
-      // Create the svg element on enter, and append a
-      // background rectangle to it.
-      svg.enter()
-        .append('svg')
-        .attr('width', width)
-        .attr('height', height)
-        .append('rect')
-        .attr('width', width)
-        .attr('height', height)
-        .attr('fill', 'white');
+      // SVG Initialization
+      svg.enter().append('svg').call(svgInit);
+
+      // Compute the horizontal scale.
+      var xScale = d3.time.scale()
+        .domain(d3.extent(data, function(d) { return d.date; }))
+        .range([0, width - margin.left - margin.right]);
+
+      // Select the chart group
+      var g = svg.select('g.chart-content');
+
+      // Bind the data to the bars selection.
+      var bars = g.selectAll('line')
+        .data(data, function(d) { return d.date; });
+
+      // Append the bars on enter and set its attributes.
+      bars.enter().append('line')
+        .attr('x1', function(d) { return xScale(d.date); })
+        .attr('x2', function(d) { return xScale(d.date); })
+        .attr('y1', 0)
+        .attr('y2', height - margin.top - margin.bottom)
+        .attr('stroke', '#000')
+        .attr('stroke-opacity', 0.5);
     });
   }
+
+  // Initialize the SVG Element
+  function svgInit(svg) {
+    // Set the SVG size
+    svg
+      .attr('width', width)
+      .attr('height', height);
+
+    // Create and translate the container group
+    var g = svg.append('g')
+      .attr('class', 'chart-content')
+      .attr('transform', 'translate(' + [margin.top, margin.left] + ')');
+
+    // Add a background rectangle
+    g.append('rect')
+      .attr('width', width - margin.left - margin.right)
+      .attr('height', height - margin.top - margin.bottom)
+      .attr('fill', 'white');
+  };
 
   // Accessor Methods
   // Width
