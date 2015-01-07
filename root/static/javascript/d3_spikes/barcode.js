@@ -14,14 +14,16 @@ var barcodeChart = function() {
           svg = div.selectAll('svg').data([data]);
 
       // SVG Initialization
-      svg.enter().append('svg').call(svgInit);
+      svg.enter()
+        .append('svg')
+        .call(svgInit);
 
       // Compute the horizontal scale.
       var xScale = d3.time.scale()
         .domain(d3.extent(data, function(d) { return d.date; }))
         .range([0, width - margin.left - margin.right]);
 
-      // Select the chart group
+      // Select the containing group
       var g = svg.select('g.chart-content');
 
       // Bind the data to the bars selection.
@@ -89,11 +91,38 @@ var barcodeChart = function() {
     return chart;
   };
 
+  // Date Accessor Method
+  chart.value = function(accessorFunction) {
+    if (!arguments.length) { return value; }
+    value = accessorFunction;
+    return chart;
+  };
+
   return chart;
 };
 
+// Compute a random interval using an Exponential Distribution
+function randomInterval(avgSeconds) {
+  return Math.floor(-Math.log(Math.random()) * 1000 * avgSeconds);
+};
+
+// Create or extend an array of increasing dates by adding a number of random seconds
+function addData(data, numItems, avgSeconds) {
+  // Compute the most recent time in the data array.
+  var n = data.length,
+      t = (n > 0) ? data[n - 1].date : new Date();
+
+  // Append items with increasing times in the data array
+  for (var k = 0; k < numItems - 1; k += 1) {
+    t = new Date(t.getTime() + randomInterval(avgSeconds));
+    data.push({date: t});
+  }
+
+  return data;
+}
+
 // The Dataset
-var data = ['a', 'b', 'c'];
+var data = addData([], 150, 300);
 
 // Get the charting function.
 var barcode = barcodeChart();
