@@ -498,6 +498,10 @@ my $tfh = File::Temp->new() or croak("Unable to open temporary file");
 while (my $d = $p->next) {
   $tfh->print($d);
 }
+# Make sure we flush the contents to the temp file, so the stat below won't
+# think the file is empty when it's not
+$tfh->flush;
+$tfh->close;
 
 # If we didn't store anything in the temporary file, then something is wrong,
 # abort
