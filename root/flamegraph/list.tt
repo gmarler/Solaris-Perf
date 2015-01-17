@@ -16,7 +16,11 @@
 [% # Display each flamegraph in a table row %]
 [% FOREACH flamegraph IN flamegraphs -%]
   <tr>
-    <td>[% flamegraph.host.name %]</td>
+    <td><a href="[%
+           c.uri_for(c.controller.action_for('svg'), [flamegraph.id]) %]">
+           [% flamegraph.host.name %]
+        </a>
+    </td>
     <td>[% USE creation = DateTime( from_object = flamegraph.creation ) %]
         [% dtf.format( creation.set_time_zone( flamegraph.host.timezone ) ) %]
     </td>
