@@ -258,87 +258,92 @@ sub next {
   # time
   # CONSTRAINT: When start_dt/end_dt defined, any data already parsed and ready
   #             for reading should be within the specified range
-  if (scalar(@{$self->interval_data}) and (not $time_range_exhausted)) {
+  if (scalar(@{$self->interval_data})) {
+    # There's still data left over from our last scan of the datastream; return
+    # it until we've exhausted it all
     return shift @{$self->interval_data};
-  }
+  } elsif ((not $self->datastream->eof) and (not $time_range_exhausted)) { 
+    # If the interval data is exhausted, try to extract more from the datastream
+    do {
+      $self->datastream->read($buf,$READ_SZ);
+      $c .= $buf;
+      # Extract as many whole sections as possible, process, then
+      # continue on
+      my (@subs);
+      # If we're at the end of the file, then we need to use a special case regex
+      if ($self->datastream->eof) {
+        @subs = $c =~ m{ $regex_eof }gsmx;
+      } else {
+        @subs = $c =~ m{ $regex }gsmx;
+      }
+      # Populate the interval data from what we've read in
+      if (@subs) {
+        my ($data,$dt_stamp,$coredata,$esecs,$drops);
 
-  # If the interval data is exhausted, try to extract more from the datastream
-  do {
-    $self->datastream->read($buf,$READ_SZ);
-    $c .= $buf;
-    # Extract as many whole sections as possible, process, then
-    # continue on
-    my (@subs);
-    # If we're at the end of the file, then we need to use a special case regex
-    if ($self->datastream->eof) {
-      @subs = $c =~ m{ $regex_eof }gsmx;
-    } else {
-      @subs = $c =~ m{ $regex }gsmx;
-    }
-    if (@subs) {
-      my ($data,$dt_stamp,$coredata,$esecs,$drops);
-      for (my $i = 0; $i < scalar(@subs); $i++) {
-        $data = $subs[$i];
-        # Break out timestamp, parse into DateTime object
-        ($dt_stamp) = $data =~ m/ ($dt_regex) /smx;
-        chomp $dt_stamp;
-        ($coredata = $data) =~ s/ $dt_regex //smx;
-        # Rip out the time zone so parse_datetime will accept the $dtstamp
-        $dt_stamp =~ s{\w+ \s+ (\d{4})$}{$1}x;
-        # Of course, some like pgstat are different (the time zone comes last)
-        $dt_stamp =~ s{(\d{4}) \s+ \w+$}{$1}x;
-        my ($dt) = DateTime::Format::Stats->parse_datetime($dt_stamp);
-        unless ($dt_primed) {
-          my ($year,$month,$day) = ($dt->year, $dt->month, $dt->day);
-          $start_dt->set_year($year);       $end_dt->set_year($year);
-          $start_dt->set_month($month);     $end_dt->set_month($month);
-          $start_dt->set_day($day);         $end_dt->set_day($day);
-          $self->start($start_dt);   $self->end($end_dt);
-          $dt_primed = $self->dt_primed(1);
-        }
-        # Exit the loop here if we've passed the end of the interesting time range
-        if (defined($end_dt) and ($dt > $end_dt)) {
-          $time_range_exhausted++;
-          last;
-        }
-        # TODO: Parse the individual data sections into something we can print
-        #       out directly in any format
-        my $data;
-        if ($self->interval_subparse) {
-          my ($data) = $self->_parse_interval($coredata);
-          $data->{datetime} = $dt;
-        } else {
-          $data = $coredata;
-        }
-        # Handle whether we're looking for a specific range or not
-        if ($start_dt and $end_dt) {
-          if (($start_dt <= $dt) and ($dt <= $end_dt)) {
+        for (my $i = 0; $i < scalar(@subs); $i++) {
+          $data = $subs[$i];
+          # Break out timestamp, parse into DateTime object
+          ($dt_stamp) = $data =~ m/ ($dt_regex) /smx;
+          chomp $dt_stamp;
+          ($coredata = $data) =~ s/ $dt_regex //smx;
+          # Rip out the time zone so parse_datetime will accept the $dtstamp
+          $dt_stamp =~ s{\w+ \s+ (\d{4})$}{$1}x;
+          # Of course, some like pgstat are different (the time zone comes last)
+          $dt_stamp =~ s{(\d{4}) \s+ \w+$}{$1}x;
+          my ($dt) = DateTime::Format::Stats->parse_datetime($dt_stamp);
+          unless ($dt_primed) {
+            my ($year,$month,$day) = ($dt->year, $dt->month, $dt->day);
+            $start_dt->set_year($year);       $end_dt->set_year($year);
+            $start_dt->set_month($month);     $end_dt->set_month($month);
+            $start_dt->set_day($day);         $end_dt->set_day($day);
+            $self->start($start_dt);   $self->end($end_dt);
+            $dt_primed = $self->dt_primed(1);
+          }
+          # Exit the loop here if we've passed the end of the interesting time range
+          if (defined($end_dt) and ($dt > $end_dt)) {
+            $time_range_exhausted++;
+            last;
+          }
+          # TODO: Parse the individual data sections into something we can print
+          #       out directly in any format
+          my $data;
+          if ($self->interval_subparse) {
+            my ($data) = $self->_parse_interval($coredata);
+            $data->{datetime} = $dt;
+          } else {
+            $data = $coredata;
+          }
+          # Handle whether we're looking for a specific range or not
+          if ($start_dt and $end_dt) {
+            if (($start_dt <= $dt) and ($dt <= $end_dt)) {
+              push @{$self->interval_data}, $data;
+            }
+          } else {
             push @{$self->interval_data}, $data;
           }
-        } else {
-          push @{$self->interval_data}, $data;
         }
-      }
-      # Delete what we've parsed so far from our contents buffer...
-      if ($self->datastream->eof) {
-        $drops = $c =~ s{ $regex_eof }{}gsmx;
-      } else {
-        $drops = $c =~ s{ $regex }{}gsmx;
-      }
-      # Update the record count
-      $self->record_count($self->record_count + $drops);
-    }
-  } until (scalar(@{$self->interval_data}) or $self->datastream->eof or
-           $time_range_exhausted);
 
-  if ( (not $time_range_exhausted) and scalar(@{$self->interval_data}) ) {
-    return shift @{$self->interval_data};
+        # Delete what we've parsed so far from our contents buffer...
+        if ($self->datastream->eof) {
+          $drops = $c =~ s{ $regex_eof }{}gsmx;
+        } else {
+          $drops = $c =~ s{ $regex }{}gsmx;
+        }
+        # Update the record count
+        $self->record_count($self->record_count + $drops);
+      }
+    } until (scalar(@{$self->interval_data}) or $self->datastream->eof or
+             $time_range_exhausted);
+
+    if ( scalar(@{$self->interval_data}) ) {
+      return shift @{$self->interval_data};
+    } else {
+      return;  # undef
+    }
   } else {
-    return;  # undef
+    return; # undef - nothing else available - this iterator is now empty
   }
 }
-
-
 
 
 
