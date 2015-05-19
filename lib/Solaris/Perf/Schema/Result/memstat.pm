@@ -17,6 +17,12 @@ primary_column memstat_id => {
 
 # Actual fields for this row type
 # NOTE: Normalizing all sizes to bytes
+
+column datetime => {
+  data_type           => 'datetime',
+  time_zone           => 'UTC',
+};
+
 column kernel => {
     data_type         => 'integer',
 };
@@ -57,7 +63,7 @@ column total => {
     data_type         => 'integer',
 };
 
-#belongs_to host => 'Solaris::Perf::Schema::Result::Host',
+  #belongs_to host => 'Solaris::Perf::Schema::Result::Host',
 #                   { 'foreign.host_id' => 'self.host_fk' };
 
 1;
