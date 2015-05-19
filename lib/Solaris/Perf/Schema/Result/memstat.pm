@@ -24,43 +24,43 @@ column datetime => {
 };
 
 column kernel => {
-    data_type         => 'integer',
+    data_type         => 'bigint',
 };
 
 column guest => {
-    data_type         => 'integer',
+    data_type         => 'bigint',
 };
 
 column zfs_metadata => {
-   data_type         => 'integer',
+   data_type         => 'bigint',
 };
 
 column zfs_file_data => {
-    data_type         => 'integer',
+    data_type         => 'bigint',
 };
 
 column anon => {
-    data_type         => 'integer',
+    data_type         => 'bigint',
 };
 
 column exec_and_libs => {
-    data_type         => 'integer',
+    data_type         => 'bigint',
 };
 
 column page_cache => {
-    data_type         => 'integer',
+    data_type         => 'bigint',
 };
 
 column free_cachelist => {
-    data_type         => 'integer',
+    data_type         => 'bigint',
 };
 
 column free_freelist => {
-    data_type         => 'integer',
+    data_type         => 'bigint',
 };
 
 column total => {
-    data_type         => 'integer',
+    data_type         => 'bigint',
 };
 
   #belongs_to host => 'Solaris::Perf::Schema::Result::Host',
