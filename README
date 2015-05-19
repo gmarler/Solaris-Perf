@@ -28,3 +28,12 @@ CATALYST_CONFIG_LOCAL_SUFFIX=test \
 # "Prod":
 #
 perl -I./lib lib/Solaris/Perf/Schema/MigrationScript.pm <command>
+
+
+
+
+#
+# DBIx::Class::Migration setup
+#
+export DBIC_MIGRATION_SANDBOX_CLASS=PostgresqlSandbox
+
