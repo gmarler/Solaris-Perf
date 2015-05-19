@@ -8,22 +8,18 @@ use namespace::autoclean;
 with 'Solaris::PerfParser';
 
 sub _build_dt_regex {
-  # This data is extracted from mdb's time::print dcmd, which emits:
-  #   YYYY Mon Day HH:MM:SS
+  # this data is extracted from mdb's dcmd of the following form:
+  # time::print -d ! sed -e 's/^0t//'
+  # which *should be* epoch secs
   return qr{^
-            (?: \d{4} \s+        # year
-                (?:Jan|Feb|Mar|Apr|May|Jun|
-                   Jul|Aug|Sep|Oct|Nov|Dec
-                ) \s+
-                \d+ \s+          # day of month
-                \d+:\d+:\d+ \s+  # HH:MM:DD  (24 hour clock)
+            (?: \d+     # Epoch secs
                 \n
             )
            }smx;
 }
 
 sub _build_strptime_pattern {
-  return "%Y %B %d %H:%M:%S",
+  return "%s";
 }
 
 
