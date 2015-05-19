@@ -35,5 +35,7 @@ perl -I./lib lib/Solaris/Perf/Schema/MigrationScript.pm <command>
 #
 # DBIx::Class::Migration setup
 #
+export POSTGRES_HOME='/perfwork/pgsql/9.4.1'
 export DBIC_MIGRATION_SANDBOX_CLASS=PostgresqlSandbox
+export DBIC_MIGRATION_SCHEMA_CLASS=Solaris::Perf::Schema
 

@@ -34,29 +34,39 @@ sub _parse_interval {
 
   my (%memstat_data);
 
+  # TODO: Total doesn't yet work, so fix it, as it doesn't have the
+  #       pct_of_total column
   my $memstat_regex =
-    qr{^ (?: \s+? (?<pgtype>(?:Page|---)) [^\n]+ \n |   # memstat data headers
-             \s+? (?<pgtype>(?:Kernel|Defdump\sprealloc|Guest|ZFS\sMetadata|
-                               ZFS\sFile\sData|Anon|Exec\sand\slibs|Page\scache|
-                               Free\s\(cachelist\)|Free\s\(freelist\)|
-                               Total)) \s+
-                  (?<pgcount>\d+) \s+
-                  (?<bytes>\d+) \s+
-                  (?<pct_of_total>\d+)
+    qr{^ (?: (?<pgtype>(?:Page\sSummary|---)) [^\n]+ \n |   # memstat data headers
+             (?<pgtype>(?:Kernel|Defdump\sprealloc|Guest|ZFS\sMetadata|
+                          ZFS\sFile\sData|Anon|Exec\sand\slibs|Page\scache|
+                          Free\s\(cachelist\)|Free\s\(freelist\)|
+                          In\stemporary\suse))          \s+
+             (?<pgcount>\d+)               \s+
+             (?<bytes>\d+(?:\.\d+[kMG])?)  \s+
+             (?<pct_of_total>\d+)\%
              \n
-         )
+         ) |
+         (?: (?<pgtype>Total) \s+
+             (?<pgcount>\d+)  \s+
+             (?<bytes>\d+(?:\.\d+[kMG])?) \n )
       }smx;
 
   while ($data =~ m{ $memstat_regex }gsmx ) {
     # Skip headers
-    next if ($+{pgtype} =~ m{^(?:Page|---)$} );
+    next if ($+{pgtype} =~ m{^(?:Page\sSummary|In\stemporary\suse|---)$} );
 
-    my $page_type = $+{pgtype};
+    my ($page_type,$page_count,$bytes,$pct_of_total) =
+      @+{ qw(pgtype pgcount bytes pct_of_total) };
+
+    # Fix $page_type names so they can be used as hash keys
+    $page_type = lc($page_type);
+    $page_type =~ s/[()]//g;
+    $page_type =~ s/\s+/_/g;  # Replace spaces with underscores
+
     $memstat_data{$page_type} = { };
 
-    my ($page_count,$bytes,$pct_of_total) = $+{'pgcount','bytes','pct_of_total'};
-
-    if ($bytes =~ m/(?<size>\d+)(?<unit>k|M|G|)$/) {
+    if ($bytes =~ m/(?<size>\d+(?:\.\d+)?)(?<unit>k|M|G|)$/) {
       $bytes = $+{size};
       if ($+{unit} eq '') { # must be in bytes, nothing to do
       } elsif ($+{unit} eq 'k') {
@@ -66,15 +76,15 @@ sub _parse_interval {
       } elsif ($+{unit} eq 'G') {
         $bytes *= 1024 * 1024 * 1024;
       }
+      $bytes = int($bytes);  # Eliminate possible "fractional" bytes
     }
 
-    $memstat_data{$page_type}->{'page_count','bytes','pct_of_total'} =
+    @{$memstat_data{$page_type}}{ qw(page_count bytes pct_of_total) } =
       ($page_count, $bytes, $pct_of_total);
   }
 
   return \%memstat_data;
 }
-
 
 
 __PACKAGE__->meta->make_immutable;

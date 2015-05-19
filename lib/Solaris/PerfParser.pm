@@ -21,12 +21,13 @@ requires '_build_strptime_pattern';
 requires '_parse_interval';
 
 # Define these, so we can use them in type unions below as needed
+class_type 'IO::Handle';
 class_type 'IO::File';
 class_type 'IO::All::File';
 class_type 'IO::Uncompress::Bunzip2';
 
 has 'datastream' => ( is       => 'rw',
-                      isa      => 'IO::File | IO::All::File | IO::Uncompress::Bunzip2',
+                      isa      => 'IO::Handle | IO::File | IO::All::File | IO::Uncompress::Bunzip2',
                       required => 1,
                     );
 
