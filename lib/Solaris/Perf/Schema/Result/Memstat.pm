@@ -1,4 +1,4 @@
-package Solaris::Perf::Schema::Result::memstat;
+package Solaris::Perf::Schema::Result::Memstat;
 
 # VERSION
 

@@ -1,0 +1,65 @@
+{
+   "sets" : [
+#      {
+#         "class" : "IOAction",
+#         "quantity" : "all"
+#      },
+#      {
+#         "class" : "HostZpool",
+#         "quantity" : "all"
+#      },
+#      {
+#         "class" : "FS",
+#         "quantity" : "all"
+#      },
+#      {
+#         "class" : "ZpoolLat",
+#         "quantity" : "all"
+#      },
+#      {
+#         "quantity" : "all",
+#         "class" : "Zpool"
+#      },
+#      {
+#         "quantity" : "all",
+#         "class" : "IDLE"
+#      },
+      {
+         "quantity" : "all",
+         "class" : "Memstat"
+      },
+#      {
+#         "class" : "Interval",
+#         "quantity" : "all"
+#      },
+#      {
+#         "quantity" : "all",
+#         "class" : "vmstat"
+#      },
+#      {
+#         "quantity" : "all",
+#         "class" : "Host"
+#      },
+#      {
+#         "class" : "mpstat",
+#         "quantity" : "all"
+#      },
+#      {
+#         "class" : "HostInterval",
+#         "quantity" : "all"
+#      },
+#      {
+#         "quantity" : "all",
+#         "class" : "Flamegraph"
+#      }
+   ],
+   "has_many" : {
+      "fetch" : 0
+   },
+   "might_have" : {
+      "fetch" : 0
+   },
+   "belongs_to" : {
+      "fetch" : 0
+   }
+}
