@@ -43,13 +43,13 @@ sub _parse_interval {
                           Free\s\(cachelist\)|Free\s\(freelist\)|
                           In\stemporary\suse))          \s+
              (?<pgcount>\d+)               \s+
-             (?<bytes>\d+(?:\.\d+[kMG])?)  \s+
+             (?<bytes>\d+(?:\.\d+)?(?:[kMG])?)  \s+
              (?<pct_of_total>\d+)\%
              \n
          ) |
          (?: (?<pgtype>Total) \s+
              (?<pgcount>\d+)  \s+
-             (?<bytes>\d+(?:\.\d+[kMG])?) \n )
+             (?<bytes>\d+(?:\.\d+)?(?:k|M|G|)?) \n )
       }smx;
 
   while ($data =~ m{ $memstat_regex }gsmx ) {
@@ -81,6 +81,9 @@ sub _parse_interval {
 
     @{$memstat_data{$page_type}}{ qw(page_count bytes pct_of_total) } =
       ($page_count, $bytes, $pct_of_total);
+
+    # Clean up undefined "Total"'s percent of total, which is 100%
+    $memstat_data{total}->{pct_of_total} = 100;
   }
 
   return \%memstat_data;
