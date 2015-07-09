@@ -102,17 +102,20 @@ sub import {
   my $p = Solaris::PerfParser::memstat->new( %parser_args );
 
   my ($records,@data_array);
+  #
+  # NOTE: For the moment, always leave out Guest, as it's always 0
+  #
   my @header_labels =
     qw( datetime
-        anon
+        kernel
         exec_and_libs
+        anon
+        guest
+        zfs_metadata
+        zfs_file_data
+        page_cache
         free_cachelist
         free_freelist
-        guest
-        kernel
-        page_cache
-        zfs_file_data
-        zfs_metadata
         total
       );
 
